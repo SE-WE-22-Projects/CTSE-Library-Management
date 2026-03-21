@@ -1,15 +1,17 @@
 services:
-  service:
-    build:
-      context: ./service
-    ports:
-      - "3000:3000"
-
   book_service:
     build:
       context: ./services/book-service
     ports:
       - "3001:3001"
+    env_file: ".env"
+
+  template:
+    build:
+      context: ./services/template
+    ports:
+      - "3000:3000"
+    env_file: ".env"
 
   keycloak:
     image: quay.io/keycloak/keycloak:26.5.6

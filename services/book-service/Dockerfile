@@ -7,14 +7,13 @@ RUN corepack enable
 FROM base AS prod-deps
 WORKDIR /app
 COPY package.json package.json
-COPY pnpm-lock.yaml pnpm-lock.yaml
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --prod --frozen-lockfile
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --prod
 
 # build the server
 FROM prod-deps AS build
 WORKDIR /app
 COPY . .
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install
 RUN pnpm run build
 
 FROM base AS deploy
@@ -22,7 +21,7 @@ WORKDIR /app
 COPY --from=prod-deps /app/node_modules /app/node_modules
 COPY --from=build /app/dist /app/dist
 COPY health-check.js .
-ENV PORT=3001 
+ENV PORT=3001
 HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 CMD ["node", "healthcheck.js"]
 EXPOSE 3001
 CMD ["node", "/app/dist/src/main.js"]

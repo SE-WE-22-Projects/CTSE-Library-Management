@@ -7,7 +7,7 @@ async function bootstrap() {
 
   app.enableCors();
 
-  // 🔹 Swagger Config
+  // Swagger Config
   const config = new DocumentBuilder()
     .setTitle('Book Management API')
     .setDescription('API for managing books')

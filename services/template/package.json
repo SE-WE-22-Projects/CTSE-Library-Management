@@ -25,9 +25,12 @@
     "@nestjs/core": "^11.1.17",
     "@nestjs/mongoose": "^11.0.4",
     "@nestjs/platform-express": "^11.1.17",
+    "@nestjs/swagger": "^11.2.6",
+    "class-validator": "^0.14.4",
     "mongoose": "^9.3.1",
     "reflect-metadata": "^0.2.2",
-    "rxjs": "^7.8.2"
+    "rxjs": "^7.8.2",
+    "swagger-ui-express": "^5.0.1"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.5",

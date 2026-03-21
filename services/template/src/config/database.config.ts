@@ -1,5 +1,7 @@
-import { ConfigService } from '@nestjs/config';
+import { MongooseModuleFactoryOptions } from '@nestjs/mongoose';
+import { name } from '../../package.json';
 
-export const databaseConfig = (configService: ConfigService) => ({
-  uri: configService.get<string>('MONGO_URI') as string,
+export const databaseConfig = (): MongooseModuleFactoryOptions => ({
+  uri: process.env['MONGO_URI']!,
+  dbName: name,
 });
