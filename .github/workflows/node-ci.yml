@@ -5,9 +5,9 @@ name: Node.js CI
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
 jobs:
   detect-changed-services:
@@ -24,15 +24,15 @@ jobs:
         uses: tj-actions/changed-files@v47
         with:
           dir_names: true
-          dir_names_max_depth: 2 
+          dir_names_max_depth: 2
           json: true
           quotepath: false
           files: services/*
-          
-      - name: 'Set output in the matrix format'
+
+      - name: "Set output in the matrix format"
         id: set-output
         run: echo "changed_directories={\"dir\":${{ steps.changed-files.outputs.all_changed_files }}}" >> "$GITHUB_OUTPUT"
-        
+
   build:
     runs-on: ubuntu-latest
     needs:
@@ -41,20 +41,23 @@ jobs:
     strategy:
       fail-fast: true
       matrix: ${{fromJson(needs.detect-changed-services.outputs.changed_directories)}}
-       
+
     steps:
-    - uses: actions/checkout@v4
-    - name: Use Node.js 22.x
-      uses: actions/setup-node@v4
-      with:
-        node-version: 22.x
-      
-    - uses: pnpm/action-setup@v4
-      name: Install pnpm
-      with:
-        cache: true
-        run_install: |
+      - uses: actions/checkout@v4
+      - name: Use Node.js 22.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
+        with:
+          cache: true
+          run_install: |
             - recursive: true
 
-    - run: pnpm test
-      working-directory: ${{ matrix.dir }}
+      - run: pnpm lint
+        working-directory: ${{ matrix.dir }}
+
+      - run: pnpm test
+        working-directory: ${{ matrix.dir }}
