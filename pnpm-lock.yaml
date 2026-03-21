@@ -123,7 +123,7 @@ importers:
         specifier: ^8.57.1
         version: 8.57.1(eslint@9.39.4)(typescript@5.9.3)
 
-  services/service:
+  services/template:
     dependencies:
       '@nestjs/common':
         specifier: ^11.1.17
