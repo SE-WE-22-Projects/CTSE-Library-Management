@@ -5,6 +5,12 @@ services:
     ports:
       - "3000:3000"
 
+  book_service:
+    build:
+      context: ./services/book-service
+    ports:
+      - "3001:3001"
+
   keycloak:
     image: quay.io/keycloak/keycloak:26.5.6
     environment:
