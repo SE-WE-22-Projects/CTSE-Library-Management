@@ -11,7 +11,7 @@ export class AppController {
     return this.appService.getHello();
   }
 
-  @Get('/health')
+  @Get('/api/health')
   getHealth(): any {
     return { healthy: true, version: version };
   }
