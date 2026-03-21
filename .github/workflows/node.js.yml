@@ -14,6 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     
     strategy:
+      fail-fast: true
       matrix:
         service: 
           - service
@@ -30,6 +31,9 @@ jobs:
       name: Install pnpm
       with:
         version: 10
+        cache: true
+        run_install: |
+            - cwd: services/${{ matrix.service }} 
         
     - run: pnpm install --frozen-lockfile
       working-directory: services/${{ matrix.service }}
