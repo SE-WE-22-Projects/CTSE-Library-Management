@@ -33,10 +33,7 @@ jobs:
         version: 10
         cache: true
         run_install: |
-            - cwd: services/${{ matrix.service }} 
-        
-    - run: pnpm install --frozen-lockfile
-      working-directory: services/${{ matrix.service }}
+            - recursive: true
 
     - run: pnpm test
       working-directory: services/${{ matrix.service }}
