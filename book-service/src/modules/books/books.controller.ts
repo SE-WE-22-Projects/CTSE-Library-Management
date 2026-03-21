@@ -1,0 +1,65 @@
+import {
+    Controller,
+    Get,
+    Post,
+    Body,
+    Param,
+    Query,
+    Put,
+    Delete,
+} from '@nestjs/common';
+import { BooksService } from './books.service';
+import { CreateBookDto } from './dto/create-book.dto';
+import { UpdateBookDto } from './dto/update-book.dto';
+import { ApiTags, ApiOperation, ApiQuery, ApiParam } from '@nestjs/swagger';
+
+@ApiTags('Books')
+@Controller('books')
+export class BooksController {
+    constructor(private readonly booksService: BooksService) { }
+
+    @Post()
+    @ApiOperation({ summary: 'Create a new book' })
+    create(@Body() dto: CreateBookDto) {
+        return this.booksService.create(dto);
+    }
+
+    @Get()
+    @ApiOperation({ summary: 'Get all books with optional search & category filter' })
+    @ApiQuery({ name: 'search', required: false })
+    @ApiQuery({ name: 'category', required: false })
+    findAll(
+        @Query('search') search?: string,
+        @Query('category') category?: string,
+    ) {
+        return this.booksService.findAll(search, category);
+    }
+
+    @Get('category/:category')
+    @ApiOperation({ summary: 'Get books by category' })
+    @ApiParam({ name: 'category' })
+    findByCategory(@Param('category') category: string) {
+        return this.booksService.findByCategory(category);
+    }
+
+    @Get(':id')
+    @ApiOperation({ summary: 'Get book by ID' })
+    @ApiParam({ name: 'id' })
+    findById(@Param('id') id: string) {
+        return this.booksService.findById(id);
+    }
+
+    @Put(':id')
+    @ApiOperation({ summary: 'Update book by ID' })
+    @ApiParam({ name: 'id' })
+    update(@Param('id') id: string, @Body() dto: UpdateBookDto) {
+        return this.booksService.update(id, dto);
+    }
+
+    @Delete(':id')
+    @ApiOperation({ summary: 'Delete book by ID' })
+    @ApiParam({ name: 'id' })
+    delete(@Param('id') id: string) {
+        return this.booksService.delete(id);
+    }
+}
