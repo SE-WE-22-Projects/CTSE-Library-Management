@@ -13,7 +13,7 @@ jobs:
       matrix:
         include:
           - name: service
-          - name: book_service
+          - name: book-service
     permissions:
       contents: read
       packages: write
