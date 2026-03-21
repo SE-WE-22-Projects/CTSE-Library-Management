@@ -37,7 +37,7 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
         with:
-          context: ./service
+          context: ./services/${{matrix.name}}
           push: true
           tags: ghcr.io/se-we-22-projects/${{ matrix.name }}:${{github.ref_name}}
           cache-from: type=gha
