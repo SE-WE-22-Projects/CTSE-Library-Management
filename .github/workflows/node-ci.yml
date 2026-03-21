@@ -37,7 +37,7 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       - detect-changed-services
-    if: ${{ fromJson(needs.detect-changed-services.outputs.changed_directories)[0] != null  }}
+    if: ${{ fromJson(needs.detect-changed-services.outputs.changed_directories)[0] == null  }}
     strategy:
       fail-fast: true
       matrix: ${{fromJson(needs.detect-changed-services.outputs.changed_directories)}}
