@@ -2,29 +2,29 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsString, IsNumber, IsOptional, IsDateString } from 'class-validator';
 
 export class CreateBookDto {
-    @ApiProperty()
-    @IsString()
-    title: string;
+  @ApiProperty()
+  @IsString()
+  title: string;
 
-    @ApiProperty()
-    @IsString()
-    author: string;
+  @ApiProperty()
+  @IsString()
+  author: string;
 
-    @ApiPropertyOptional()
-    @IsOptional()
-    @IsString()
-    description?: string;
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  description?: string;
 
-    @ApiProperty()
-    @IsNumber()
-    price: number;
+  @ApiProperty()
+  @IsNumber()
+  price: number;
 
-    @ApiProperty()
-    @IsString()
-    category: string;
+  @ApiProperty()
+  @IsString()
+  category: string;
 
-    @ApiPropertyOptional()
-    @IsOptional()
-    @IsDateString()
-    publishedDate?: Date;
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsDateString()
+  publishedDate?: Date;
 }

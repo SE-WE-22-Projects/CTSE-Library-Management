@@ -17,4 +17,4 @@ import { BooksModule } from './modules/books/books.module';
     BooksModule,
   ],
 })
-export class AppModule { }
+export class AppModule {}

@@ -5,26 +5,26 @@ export type BookDocument = Book & Document;
 
 @Schema({ timestamps: true })
 export class Book {
-    @Prop({ required: true })
-    title: string;
+  @Prop({ required: true })
+  title: string;
 
-    @Prop({ required: true })
-    author: string;
+  @Prop({ required: true })
+  author: string;
 
-    @Prop()
-    description: string;
+  @Prop()
+  description: string;
 
-    @Prop({ required: true })
-    price: number;
+  @Prop({ required: true })
+  price: number;
 
-    @Prop({ required: true })
-    category: string;
+  @Prop({ required: true })
+  category: string;
 
-    @Prop()
-    publishedDate: Date;
+  @Prop()
+  publishedDate: Date;
 
-    @Prop({ default: true })
-    isAvailable: boolean;
+  @Prop({ default: true })
+  isAvailable: boolean;
 }
 
 export const BookSchema = SchemaFactory.createForClass(Book);
