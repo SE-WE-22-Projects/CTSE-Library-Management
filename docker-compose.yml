@@ -16,6 +16,13 @@ services:
       - "3000:3000"
     env_file: ".env"
 
+  notification_service:
+    build:
+      context: ./services/lending-service
+    ports:
+      - "3003:3003"
+    env_file: ".env"
+
   user_service:
     build:
       context: ./services/user-service
