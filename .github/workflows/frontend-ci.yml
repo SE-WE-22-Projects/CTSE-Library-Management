@@ -23,9 +23,9 @@ jobs:
 
       - uses: pnpm/action-setup@v4
         name: Install pnpm
-        working-directory: ./frontend
         with:
           cache: true
+          package_json_file: ./frontend/package.json
           run_install: |
             - recursive: true
 
