@@ -30,11 +30,8 @@ jobs:
         id: get_version
         run: |
           VERSION=$(git describe --tags --always)
-          echo echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "Running for version: $VERSION"
-      - name: Use Version
-        run: |
-          echo "The version is ${{ steps.get_version.outputs.version }}"
           
   build-and-push:
     runs-on: ubuntu-latest
