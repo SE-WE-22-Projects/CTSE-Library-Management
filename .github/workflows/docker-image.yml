@@ -12,8 +12,10 @@ jobs:
       fail-fast: true
       matrix:
         include:
-          - name: service
           - name: book-service
+          - name: user-service
+          - name: notification-service
+          - name: lending-service
     permissions:
       contents: read
       packages: write
