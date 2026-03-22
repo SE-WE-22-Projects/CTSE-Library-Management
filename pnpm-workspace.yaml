@@ -1,9 +1,10 @@
 packages:
   - services/*
+  - frontend
 
 ignoredBuiltDependencies:
-  - '@nestjs/core'
-  - '@scarf/scarf'
+  - "@nestjs/core"
+  - "@scarf/scarf"
   - unrs-resolver
   - frontend
 
