@@ -1,4 +1,4 @@
-name: Build Docker image
+name: Build Images & Deploy System
 
 on:
   push:
@@ -7,12 +7,12 @@ on:
   workflow_dispatch:
     inputs:
       push_images:
-        description: "Whether to push the images to ghcr"
+        description: "Push images to GHCR"
         type: boolean
         required: true
         default: false
       deploy:
-        description: "Whether to deploy the services"
+        description: "Deploy images to Azure"
         type: boolean
         required: true
         default: false
@@ -26,14 +26,21 @@ jobs:
         include:
           - name: book-service
             dir: services/book-service
+            azure_profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+            azure_app_name: "as-lending"
+
           - name: user-service
             dir: services/user-service
+
           - name: notification-service
             dir: services/notification-service
+
           - name: lending-service
             dir: services/lending-service
+
           - name: frontend
             dir: frontend
+
     permissions:
       contents: read
       packages: write
@@ -60,3 +67,15 @@ jobs:
           tags: ghcr.io/se-we-22-projects/${{ matrix.name }}:${{github.ref_name}}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          
+      - name: Deploy to azure
+        if: ${{ matrix.azure_app_name != '' &&  (inputs.push_images || true) }}
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: ${{ matrix.azure_app_name }}
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          images: ghcr.io/se-we-22-projects/${{ matrix.name }}:${{github.ref_name}}
+          app-settings: |
+            -DOCKER_REGISTRY_SERVER_URL https://ghcr.io
+            -DOCKER_REGISTRY_SERVER_USERNAME ${{ secrets.GHCR_USERNAME }}
+            -DOCKER_REGISTRY_SERVER_PASSWORD ${{ secrets.GHCR_TOKEN }}
