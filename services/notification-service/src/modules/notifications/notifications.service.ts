@@ -1,8 +1,18 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { NotificationHistory, NotificationHistoryDocument, NotificationStatus } from './schemas/notification-history.schema';
-import { NotificationSettings, NotificationSettingsDocument } from './schemas/notification-settings.schema';
+import {
+  NotificationHistory,
+  NotificationHistoryDocument,
+  NotificationStatus,
+} from './schemas/notification-history.schema';
+import {
+  NotificationSettings,
+  NotificationSettingsDocument,
+} from './schemas/notification-settings.schema';
 import { SendNotificationDto } from './dto/send-notification.dto';
 import { UpdateNotificationSettingsDto } from './dto/update-settings.dto';
 import * as nodemailer from 'nodemailer';
@@ -13,8 +23,10 @@ export class NotificationsService {
   private transporter: nodemailer.Transporter;
 
   constructor(
-    @InjectModel(NotificationHistory.name) private historyModel: Model<NotificationHistoryDocument>,
-    @InjectModel(NotificationSettings.name) private settingsModel: Model<NotificationSettingsDocument>,
+    @InjectModel(NotificationHistory.name)
+    private historyModel: Model<NotificationHistoryDocument>,
+    @InjectModel(NotificationSettings.name)
+    private settingsModel: Model<NotificationSettingsDocument>,
   ) {
     // Nodemailer configuration for Gmail
     this.transporter = nodemailer.createTransport({
@@ -26,14 +38,16 @@ export class NotificationsService {
     });
   }
 
-  async sendNotification(sendNotificationDto: SendNotificationDto): Promise<NotificationHistory> {
+  async sendNotification(
+    sendNotificationDto: SendNotificationDto,
+  ): Promise<NotificationHistory> {
     const { recipient, subject, content } = sendNotificationDto;
 
     // Check user settings if they have emails enabled
-    // Note: If users exist in another DB, this user ID might differ.
+    // Note: If users exist in another DPutB, this user ID might differ.
     // For simplicity, using email as user identifier for settings if userId is not provided
     const settings = await this.settingsModel.findOne({ userId: recipient });
-    
+
     // Create history record as PENDING
     const historyRecord = new this.historyModel({
       recipient,
@@ -52,7 +66,9 @@ export class NotificationsService {
 
     try {
       const mailOptions = {
-        from: process.env.SMTP_FROM_EMAIL || '"Notification Service" <no-reply@example.com>',
+        from:
+          process.env.SMTP_FROM_EMAIL ||
+          '"Notification Service" <no-reply@example.com>',
         to: recipient,
         subject: subject,
         text: content,
@@ -61,7 +77,7 @@ export class NotificationsService {
 
       const info = await this.transporter.sendMail(mailOptions);
       this.logger.log(`Message sent: ${info.messageId}`);
-      
+
       historyRecord.status = NotificationStatus.SENT;
     } catch (error) {
       this.logger.error(`Failed to send email to ${recipient}`, error.stack);
@@ -76,25 +92,35 @@ export class NotificationsService {
     return this.historyModel.find().sort({ createdAt: -1 }).exec();
   }
 
-  async getHistoryByRecipient(recipient: string): Promise<NotificationHistory[]> {
+  async getHistoryByRecipient(
+    recipient: string,
+  ): Promise<NotificationHistory[]> {
     return this.historyModel.find({ recipient }).sort({ createdAt: -1 }).exec();
   }
 
-  async updateSettings(updateSettingsDto: UpdateNotificationSettingsDto): Promise<NotificationSettings> {
+  async updateSettings(
+    updateSettingsDto: UpdateNotificationSettingsDto,
+  ): Promise<NotificationSettings> {
     const { userId, emailEnabled, promotionalEmails } = updateSettingsDto;
-    
-    return this.settingsModel.findOneAndUpdate(
-      { userId },
-      { userId, emailEnabled, promotionalEmails },
-      { new: true, upsert: true } // Create if doesn't exist
-    ).exec();
+
+    return this.settingsModel
+      .findOneAndUpdate(
+        { userId },
+        { userId, emailEnabled, promotionalEmails },
+        { new: true, upsert: true }, // Create if doesn't exist
+      )
+      .exec();
   }
 
   async getSettings(userId: string): Promise<NotificationSettings> {
     const settings = await this.settingsModel.findOne({ userId }).exec();
     if (!settings) {
       // Return default settings if none exist
-      return new this.settingsModel({ userId, emailEnabled: true, promotionalEmails: true });
+      return new this.settingsModel({
+        userId,
+        emailEnabled: true,
+        promotionalEmails: true,
+      });
     }
     return settings;
   }

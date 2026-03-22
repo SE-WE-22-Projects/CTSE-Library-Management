@@ -20,11 +20,16 @@ export class NotificationHistory {
   @Prop({ required: true })
   content: string;
 
-  @Prop({ required: true, enum: NotificationStatus, default: NotificationStatus.PENDING })
+  @Prop({
+    required: true,
+    enum: NotificationStatus,
+    default: NotificationStatus.PENDING,
+  })
   status: NotificationStatus;
 
   @Prop()
   errorMessage?: string;
 }
 
-export const NotificationHistorySchema = SchemaFactory.createForClass(NotificationHistory);
+export const NotificationHistorySchema =
+  SchemaFactory.createForClass(NotificationHistory);

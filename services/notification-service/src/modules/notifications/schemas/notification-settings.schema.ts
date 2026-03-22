@@ -15,4 +15,5 @@ export class NotificationSettings {
   promotionalEmails: boolean;
 }
 
-export const NotificationSettingsSchema = SchemaFactory.createForClass(NotificationSettings);
+export const NotificationSettingsSchema =
+  SchemaFactory.createForClass(NotificationSettings);

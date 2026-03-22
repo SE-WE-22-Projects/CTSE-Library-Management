@@ -7,11 +7,17 @@ export class UpdateNotificationSettingsDto {
   @IsNotEmpty()
   userId: string;
 
-  @ApiProperty({ example: true, description: 'Enable/disable email notifications' })
+  @ApiProperty({
+    example: true,
+    description: 'Enable/disable email notifications',
+  })
   @IsBoolean()
   emailEnabled: boolean;
 
-  @ApiProperty({ example: false, description: 'Enable/disable promotional emails' })
+  @ApiProperty({
+    example: false,
+    description: 'Enable/disable promotional emails',
+  })
   @IsBoolean()
   promotionalEmails: boolean;
 }
