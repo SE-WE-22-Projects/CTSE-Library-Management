@@ -1,3 +1,6 @@
+import:
+  - docker/keycloak.yml
+
 services:
   book_service:
     build:
@@ -6,32 +9,9 @@ services:
       - "3001:3001"
     env_file: ".env"
 
-  template:
+  user_service:
     build:
-      context: ./services/template
+      context: ./services/user-service
     ports:
-      - "3000:3000"
+      - "3002:3002"
     env_file: ".env"
-
-  keycloak:
-    image: quay.io/keycloak/keycloak:26.5.6
-    environment:
-      KC_HOSTNAME: localhost
-      KC_HOSTNAME_PORT: 7080
-      KC_HOSTNAME_STRICT_BACKCHANNEL: "true"
-      KEYCLOAK_ADMIN: admin
-      KEYCLOAK_ADMIN_PASSWORD: admin
-      KC_HEALTH_ENABLED: "true"
-      KC_LOG_LEVEL: info
-
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:7080/health/ready"]
-      interval: 15s
-      timeout: 2s
-      retries: 15
-
-    ports:
-      - "7080:7080"
-      - "7443:7443"
-
-    command: ["start-dev", "--http-port", "7080", "--https-port", "7443"]
