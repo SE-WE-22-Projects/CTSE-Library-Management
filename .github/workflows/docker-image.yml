@@ -26,7 +26,7 @@ jobs:
         include:
           - name: book-service
             dir: services/book-service
-            azure_profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+            azure_profile: secrets.AZURE_WEBAPP_PUBLISH_PROFILE
             azure_app_name: "as-lending"
 
           - name: user-service
