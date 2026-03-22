@@ -1,2 +1,7 @@
 packages:
-  - "services/*"
+  - services/*
+  - frontend
+
+onlyBuiltDependencies:
+  - esbuild
+  - msw
