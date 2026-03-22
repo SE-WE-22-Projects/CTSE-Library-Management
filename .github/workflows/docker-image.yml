@@ -4,6 +4,8 @@ on:
   push:
     tags:
       - "*"
+  workflow_dispatch:
+  
 
 jobs:
   build-and-push:
@@ -13,9 +15,15 @@ jobs:
       matrix:
         include:
           - name: book-service
+            dir: services/book-service
           - name: user-service
+            dir: services/user-service
           - name: notification-service
+            dir: services/notification-service
           - name: lending-service
+            dir: services/lending-service
+          - name: frontend
+            dir: frontend
     permissions:
       contents: read
       packages: write
@@ -37,7 +45,7 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
         with:
-          context: ./services/${{matrix.name}}
+          context: ./${{ matrix.dir }}
           push: true
           tags: ghcr.io/se-we-22-projects/${{ matrix.name }}:${{github.ref_name}}
           cache-from: type=gha
