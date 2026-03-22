@@ -51,7 +51,7 @@ jobs:
         name: Install pnpm
         with:
           cache: true
-          working-directory: ./services
+          package_json_file: ./services/package.json
           run_install: |
             - recursive: true
 
