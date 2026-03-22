@@ -6,3 +6,4 @@ dist
 Dockerfile
 .dockerignore
 .env
+keys.json
