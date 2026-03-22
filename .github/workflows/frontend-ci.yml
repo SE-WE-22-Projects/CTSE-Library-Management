@@ -1,0 +1,36 @@
+name: Frontend Node CI
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - "frontend/**"
+  pull_request:
+    branches: ["main"]
+    paths:
+      - "frontend/**"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js 22.x
+        uses: actions/setup-node@v4
+        working-directory: ./frontend
+        with:
+          node-version: 22.x
+
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
+        with:
+          cache: true
+          package_json_file: ./frontend/package.json
+          run_install: |
+            - recursive: true
+
+      - run: pnpm lint
+        working-directory: ./frontend
+
+      - run: pnpm test
+        working-directory: ./frontend
