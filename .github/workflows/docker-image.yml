@@ -76,6 +76,5 @@ jobs:
           publish-profile: ${{ secrets[matrix.azure_profile] }}
           images: ghcr.io/se-we-22-projects/${{ matrix.name }}:${{github.ref_name}}
           app-settings: |
-            -DOCKER_REGISTRY_SERVER_URL https://ghcr.io
             -DOCKER_REGISTRY_SERVER_USERNAME ${{ secrets.GHCR_USERNAME }}
             -DOCKER_REGISTRY_SERVER_PASSWORD ${{ secrets.GHCR_TOKEN }}
