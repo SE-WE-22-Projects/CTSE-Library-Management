@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import * as mongoose from 'mongoose';
+import { Permission } from './permisson.enum';
 
 export type UserDocument = User & mongoose.Document;
 
@@ -13,6 +14,11 @@ export class User {
 
   @Prop({ required: true })
   username: string;
+
+  @Prop({
+    type: [{ type: String, enum: Object.values(Permission) }],
+  })
+  permissions: Array<Permission>;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

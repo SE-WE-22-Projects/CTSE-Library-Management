@@ -5,7 +5,9 @@ import {
   IsStrongPassword,
   MaxLength,
   MinLength,
+  IsEnum,
 } from 'class-validator';
+import { Permission } from 'src/schema/permisson.enum';
 
 export class CreateUserDto {
   @ApiProperty()
@@ -21,4 +23,8 @@ export class CreateUserDto {
   @MaxLength(50)
   @MinLength(5)
   username: string;
+
+  @ApiProperty({ enum: Permission, isArray: true })
+  @IsEnum(Permission, { each: true })
+  permission: Permission;
 }
