@@ -21,7 +21,7 @@ WORKDIR /app
 COPY --from=prod-deps /app/node_modules /app/node_modules
 COPY --from=build /app/dist /app/dist
 COPY health-check.js .
-ENV PORT=3001
+ENV PORT=3002
 HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 CMD ["node", "health-check.js"]
-EXPOSE 3001
+EXPOSE 3002
 CMD ["node", "/app/dist/src/main.js"]
