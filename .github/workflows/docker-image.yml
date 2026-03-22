@@ -26,8 +26,6 @@ jobs:
         include:
           - name: book-service
             dir: services/book-service
-            azure_profile: secrets.AZURE_WEBAPP_PUBLISH_PROFILE
-            azure_app_name: "as-lending"
 
           - name: user-service
             dir: services/user-service
@@ -37,6 +35,8 @@ jobs:
 
           - name: lending-service
             dir: services/lending-service
+            azure_profile: AZURE_WEBAPP_PUBLISH_PROFILE
+            azure_app_name: as-lending
 
           - name: frontend
             dir: frontend
@@ -69,11 +69,11 @@ jobs:
           cache-to: type=gha,mode=max
           
       - name: Deploy to azure
-        if: ${{ matrix.azure_app_name != '' &&  (inputs.push_images || true) }}
+        if: ${{ matrix.azure_app_name != '' &&  matrix.azure_profile != '' &&  (inputs.push_images || true) }}
         uses: azure/webapps-deploy@v2
         with:
           app-name: ${{ matrix.azure_app_name }}
-          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          publish-profile: ${{ secrets[matrix.azure_profile] }}
           images: ghcr.io/se-we-22-projects/${{ matrix.name }}:${{github.ref_name}}
           app-settings: |
             -DOCKER_REGISTRY_SERVER_URL https://ghcr.io
