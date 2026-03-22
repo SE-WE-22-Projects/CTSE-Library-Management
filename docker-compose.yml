@@ -13,6 +13,15 @@ services:
       - "3000:3000"
     env_file: ".env"
 
+  lending_service:
+    build:
+      context: ./services/lending-service
+    ports:
+      - "3002:3002"
+    env_file: ".env"
+    environment:
+      LENDING_SERVICE_DB_NAME: lending-service
+
   keycloak:
     image: quay.io/keycloak/keycloak:26.5.6
     environment:
