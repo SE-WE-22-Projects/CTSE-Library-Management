@@ -24,9 +24,9 @@ jobs:
           dir_names_max_depth: 2
           json: true
           quotepath: false
-          files:
-            - services/**
-            - frontend
+          files: |
+            services/**
+            frontend
 
       - name: "Set output in the matrix format"
         id: set-output
