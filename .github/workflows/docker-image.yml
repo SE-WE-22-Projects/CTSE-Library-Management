@@ -5,7 +5,17 @@ on:
     tags:
       - "*"
   workflow_dispatch:
-  
+    inputs:
+      push_images:
+        description: "Whether to push the images to ghcr"
+        type: boolean
+        required: true
+        default: false
+      deploy:
+        description: "Whether to deploy the services"
+        type: boolean
+        required: true
+        default: false
 
 jobs:
   build-and-push:
@@ -46,7 +56,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: ./${{ matrix.dir }}
-          push: true
+          push: ${{ inputs.push_images || true }}
           tags: ghcr.io/se-we-22-projects/${{ matrix.name }}:${{github.ref_name}}
           cache-from: type=gha
           cache-to: type=gha,mode=max
