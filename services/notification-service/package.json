@@ -28,7 +28,7 @@
     "@nestjs/swagger": "^11.2.6",
     "class-validator": "^0.14.4",
     "mongoose": "^9.3.1",
-    "nodemailer": "^8.0.3",
+    "nodemailer": "^8.0.4",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2",
     "swagger-ui-express": "^5.0.1"
