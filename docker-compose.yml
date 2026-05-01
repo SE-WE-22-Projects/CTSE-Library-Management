@@ -31,7 +31,7 @@ services:
     build:
       context: ./gateway
     ports:
-      - "80:8080"
+      - "80:80"
     # depends_on:
     #   - user_service
     #   - book_service
