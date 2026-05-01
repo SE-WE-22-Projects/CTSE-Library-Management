@@ -32,6 +32,9 @@ jobs:
 
   build:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./services
     needs:
       - detect-changed-services
     if: ${{ needs.detect-changed-services.outputs.changed_directories != '{"dir":[]}' }}
