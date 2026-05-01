@@ -8,7 +8,7 @@ import { Model } from 'mongoose';
 import { User, UserDocument } from 'src/schema/user.schema';
 import { hash } from 'bcrypt';
 import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/upate-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
 import { UserDto } from './dto/user.dto';
 
 const saltRounds = 10;
@@ -18,7 +18,7 @@ export class UserService {
   constructor(
     @InjectModel(User.name)
     private userModel: Model<UserDocument>,
-  ) {}
+  ) { }
 
   async update(id: string, user: UpdateUserDto) {
     let hashed_password: string | undefined = undefined;
