@@ -42,20 +42,28 @@ jobs:
         include:
           - name: book-service
             dir: services/book-service
+            azure_profile: BOOK_SERVICE_AZURE_PUBLISH_PROFILE
+            azure_app_name: as-book-service
 
           - name: user-service
             dir: services/user-service
+            azure_profile: USER_SERVICE_AZURE_PUBLISH_PROFILE
+            azure_app_name: as-user-service
 
           - name: notification-service
             dir: services/notification-service
+            azure_profile: NOTIFICATION_SERVICE_AZURE_PUBLISH_PROFILE
+            azure_app_name: as-notification-service
 
           - name: lending-service
             dir: services/lending-service
-            azure_profile: AZURE_WEBAPP_PUBLISH_PROFILE
-            azure_app_name: as-lending
+            azure_profile: LENDING_SERVICE_AZURE_PUBLISH_PROFILE
+            azure_app_name: as-lending-service
 
           - name: frontend
             dir: frontend
+            azure_profile: WEB_UI_AZURE_PUBLISH_PROFILE
+            azure_app_name: as-web-ui
 
     permissions:
       contents: read
