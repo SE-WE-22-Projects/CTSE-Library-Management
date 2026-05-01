@@ -8,6 +8,8 @@ import { Login } from './pages/auth/Login';
 import { Register } from './pages/auth/Register';
 import { BooksList } from './pages/books/BooksList';
 import { MyLendings } from './pages/lendings/MyLendings';
+import { ManageBooks } from './pages/admin/ManageBooks';
+import { Notifications } from './pages/notifications/Notifications';
 
 // Auth Guard Component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -39,6 +41,8 @@ export const router = createBrowserRouter([
       { path: '/', element: <Dashboard /> },
       { path: '/books', element: <BooksList /> },
       { path: '/lendings', element: <MyLendings /> },
+      { path: '/admin/books', element: <ManageBooks /> },
+      { path: '/notifications', element: <Notifications /> },
     ],
   },
   {

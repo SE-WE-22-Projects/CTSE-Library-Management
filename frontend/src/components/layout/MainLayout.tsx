@@ -1,5 +1,5 @@
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { BookOpen, Home, Library, Users, LogOut, Moon, Sun } from 'lucide-react';
+import { BookOpen, Home, Library, Users, LogOut, Moon, Sun, Bell } from 'lucide-react';
 import { Button } from '../ui/button';
 import { useAuthStore } from '../../store/authStore';
 import { useTheme } from '../theme-provider';
@@ -19,6 +19,7 @@ export function MainLayout() {
     { name: 'Dashboard', path: '/', icon: Home },
     { name: 'Books Catalog', path: '/books', icon: BookOpen },
     { name: 'My Lendings', path: '/lendings', icon: Library },
+    { name: 'Notifications', path: '/notifications', icon: Bell },
   ];
 
   if (user?.permissions?.includes('ADMIN')) {

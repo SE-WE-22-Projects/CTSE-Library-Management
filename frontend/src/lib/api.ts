@@ -55,4 +55,15 @@ export const lendingsApi = {
     const response = await apiClient.patch(`/lending/${id}/return`)
     return response.data
   },
-}
+};
+
+export const notificationsApi = {
+  getHistory: async () => {
+    const response = await apiClient.get('/notification/history');
+    return response.data;
+  },
+  getHistoryByRecipient: async (recipient: string) => {
+    const response = await apiClient.get(`/notification/history/${recipient}`);
+    return response.data;
+  },
+};
