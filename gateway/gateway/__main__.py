@@ -64,7 +64,7 @@ if _missing:
 
 
 def base_url(host: str) -> str:
-    return f"{PROTOCOL}://{host}"
+    return f"{PROTOCOL}://{host}:80"
 
 
 # ---------------------------------------------------------------------------
