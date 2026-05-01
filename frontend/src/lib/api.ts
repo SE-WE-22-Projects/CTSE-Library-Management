@@ -36,34 +36,34 @@ export const booksApi = {
 
 export const lendingsApi = {
   getAll: async () => {
-    const response = await apiClient.get("/lending/")
+    const response = await apiClient.get("/lendings/")
     return response.data
   },
   create: async (data: { bookId: string; userId: string }) => {
-    const response = await apiClient.post("/lending/", data)
+    const response = await apiClient.post("/lendings/", data)
     return response.data
   },
   getUserHistory: async (userId: string) => {
-    const response = await apiClient.get(`/lending/history/user/${userId}`)
+    const response = await apiClient.get(`/lendings/history/user/${userId}`)
     return response.data
   },
   extend: async (id: string) => {
-    const response = await apiClient.patch(`/lending/${id}/extend`)
+    const response = await apiClient.patch(`/lendings/${id}/extend`)
     return response.data
   },
   returnBook: async (id: string) => {
-    const response = await apiClient.patch(`/lending/${id}/return`)
+    const response = await apiClient.patch(`/lendings/${id}/return`)
     return response.data
   },
-};
+}
 
 export const notificationsApi = {
   getHistory: async () => {
-    const response = await apiClient.get('/notification/history');
-    return response.data;
+    const response = await apiClient.get("/notification/history")
+    return response.data
   },
   getHistoryByRecipient: async (recipient: string) => {
-    const response = await apiClient.get(`/notification/history/${recipient}`);
-    return response.data;
+    const response = await apiClient.get(`/notification/history/${recipient}`)
+    return response.data
   },
-};
+}
