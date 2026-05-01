@@ -1,10 +1,14 @@
-name: Node.js CI
+name: Tests CI
 
 on:
   push:
-    branches: ["main"]
+    branches: ["main", "test-cases"]
+    paths:
+      - "services/**"
   pull_request:
     branches: ["main"]
+    paths:
+      - "services/**"
 
 jobs:
   detect-changed-services:
@@ -12,7 +16,7 @@ jobs:
     outputs:
       changed_directories: ${{ steps.set-output.outputs.changed_directories }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -30,20 +34,18 @@ jobs:
         id: set-output
         run: echo "changed_directories={\"dir\":${{ steps.changed-files.outputs.all_changed_files }}}" >> "$GITHUB_OUTPUT"
 
-  build:
+  test:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./services
     needs:
       - detect-changed-services
     if: ${{ needs.detect-changed-services.outputs.changed_directories != '{"dir":[]}' }}
     strategy:
-      fail-fast: true
+      fail-fast: false
       matrix: ${{fromJson(needs.detect-changed-services.outputs.changed_directories)}}
 
     steps:
       - uses: actions/checkout@v4
+
       - name: Use Node.js 22.x
         uses: actions/setup-node@v4
         with:
@@ -53,12 +55,10 @@ jobs:
         name: Install pnpm
         with:
           cache: true
-          package_json_file: ./package.json
+          package_json_file: services/package.json
           run_install: |
             - recursive: true
 
-      - run: pnpm lint
+      - name: Run tests
         working-directory: ${{ matrix.dir }}
-
-      - run: pnpm test
-        working-directory: ${{ matrix.dir }}
+        run: pnpm test -- --coverage

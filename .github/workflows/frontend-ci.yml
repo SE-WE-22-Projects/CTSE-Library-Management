@@ -9,15 +9,20 @@ on:
     branches: ["main"]
     paths:
       - "frontend/**"
+  workflow_dispatch:
+  
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+         working-directory: ./frontend
     steps:
       - uses: actions/checkout@v4
       - name: Use Node.js 22.x
         uses: actions/setup-node@v4
-        working-directory: ./frontend
+       
         with:
           node-version: 22.x
 
