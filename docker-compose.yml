@@ -28,7 +28,8 @@ services:
     env_file: ".env"
 
   gateway:
-    image: nginx:1.25-alpine
+    build:
+      context: ./gateway
     ports:
       - "80:80"
     depends_on:
@@ -36,6 +37,5 @@ services:
       - book_service
       - notification_service
       - lending_service
-    volumes:
-      - ./docker/config/nginx.conf:/etc/nginx/nginx.conf:z
     restart: unless-stopped
+    env_file: ".env"
