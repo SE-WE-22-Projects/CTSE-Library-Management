@@ -31,7 +31,7 @@ jobs:
         with:
           cache: true
           package_json_file: ./package.json
-          cache_dependency_path: ./pnpm-lock.yaml
+          cache_dependency_path: ./frontend/pnpm-lock.yaml
           version: 10
           run_install: |
             - recursive: true
