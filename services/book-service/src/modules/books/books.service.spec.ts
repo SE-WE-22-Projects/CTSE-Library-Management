@@ -104,7 +104,6 @@ describe('BooksService', () => {
         title: 'Book Title',
       };
 
-      // Mock save to reject for invalid data
       mockBookModel.mockImplementationOnce((dto) => ({
         ...dto,
         save: jest.fn().mockRejectedValue(new Error('Validation failed')),
