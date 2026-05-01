@@ -13,6 +13,7 @@ import { Model } from 'mongoose';
 import { LoginRequest } from './dto/login-request.dto';
 import { compare, hash } from 'bcrypt';
 import { RegisterRequest } from './dto/register-request.dto';
+import { LoginResponse } from './dto/login-response.dto';
 
 const saltRounds = 10;
 
@@ -70,7 +71,7 @@ export class AuthService implements OnModuleInit {
     }
   }
 
-  async login(req: LoginRequest) {
+  async login(req: LoginRequest): Promise<LoginResponse> {
     const user = await this.userModel.findOne({ email: req.email });
     if (!user) throw new BadRequestException('Username or password is invalid');
 
@@ -78,12 +79,18 @@ export class AuthService implements OnModuleInit {
     if (!correct_password)
       throw new BadRequestException('Username or password is invalid');
 
-    return this.signJWT({
+    const token = this.signJWT({
       user_id: user._id.toHexString(),
       username: user.username,
       permissions: user.permissions,
       session_id: 'INVALID',
     });
+
+    return {
+      // eslint-disable-next-line @typescript-eslint/no-base-to-string
+      token: (await token)!.toString(),
+      user: { ...user.toObject(), password_hashed: undefined },
+    };
   }
 
   async validate(tokenStr: string) {
