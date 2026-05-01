@@ -12,9 +12,9 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UserDto } from './dto/user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 
-@Controller('api/user')
+@Controller('/api/user')
 export class UserController {
-  constructor(private service: UserService) { }
+  constructor(private service: UserService) {}
 
   @Get()
   findAll(): Promise<Array<UserDto>> {

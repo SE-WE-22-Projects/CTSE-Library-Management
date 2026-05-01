@@ -86,6 +86,22 @@ export class AuthService implements OnModuleInit {
     });
   }
 
+  async validate(tokenStr: string) {
+    const jwk = this.keystore.all({ use: 'sig' })[0];
+
+    const verifier = jose.JWS.createVerify(jwk, {
+      algorithms: ['RS256'],
+    });
+
+    try {
+      await verifier.verify(tokenStr);
+      return true;
+    } catch (e) {
+      console.error(`Invalid token: ${e}`);
+      return false;
+    }
+  }
+
   private async signJWT(claims: JWT) {
     try {
       const jwk = this.keystore.all({ use: 'sig' })[0];
