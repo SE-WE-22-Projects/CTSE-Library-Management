@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { Test, TestingModule } from '@nestjs/testing';
 import { getModelToken } from '@nestjs/mongoose';
 import { NotFoundException } from '@nestjs/common';
@@ -48,11 +49,11 @@ describe('BooksService', () => {
   beforeEach(async () => {
     mockBookModel = jest.fn().mockImplementation((dto) => ({
       ...dto,
-      _id: '507f1f77bcf86cd799439011', 
+      _id: '507f1f77bcf86cd799439011',
       save: jest.fn().mockResolvedValue({
         ...dto,
         _id: '507f1f77bcf86cd799439011',
-        isAvailable: true, 
+        isAvailable: true,
       }),
     }));
 
@@ -109,7 +110,9 @@ describe('BooksService', () => {
         save: jest.fn().mockRejectedValue(new Error('Validation failed')),
       }));
 
-      await expect(service.create(invalidDto)).rejects.toThrow('Validation failed');
+      await expect(service.create(invalidDto)).rejects.toThrow(
+        'Validation failed',
+      );
     });
   });
 
