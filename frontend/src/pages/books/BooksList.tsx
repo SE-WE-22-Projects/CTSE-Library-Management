@@ -1,13 +1,23 @@
 import { useEffect, useState } from 'react';
 import { booksApi, lendingsApi } from '../../lib/api';
+import { AxiosError } from 'axios';
 import { useAuthStore } from '../../store/authStore';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
 import { BookOpen } from 'lucide-react';
 
+interface Book {
+  _id: string;
+  title: string;
+  author: string;
+  description: string;
+  category: string;
+  isAvailable: boolean;
+}
+
 export function BooksList() {
-  const [books, setBooks] = useState<any[]>([]);
+  const [books, setBooks] = useState<Book[]>([]);
   const [loading, setLoading] = useState(true);
   const [borrowing, setBorrowing] = useState<string | null>(null);
   const { user } = useAuthStore();
@@ -35,8 +45,9 @@ export function BooksList() {
       await lendingsApi.create({ bookId, userId: user._id });
       // Reload books to update availability (or just update local state)
       await loadBooks();
-    } catch (err: any) {
-      alert(err.response?.data?.message || 'Failed to borrow book');
+    } catch (err: unknown) {
+      const axiosError = err as AxiosError<{message: string}>;
+      alert(axiosError.response?.data?.message || 'Failed to borrow book');
     } finally {
       setBorrowing(null);
     }

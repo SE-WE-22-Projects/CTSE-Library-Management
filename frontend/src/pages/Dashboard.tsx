@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import { booksApi, lendingsApi } from '../../lib/api';
-import { useAuthStore } from '../../store/authStore';
+import { booksApi, lendingsApi } from '../lib/api';
+import { useAuthStore } from '../store/authStore';
 import { BookOpen, Library, CheckCircle, Clock } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 
 export function Dashboard() {
   const { user } = useAuthStore();
@@ -18,7 +18,7 @@ export function Dashboard() {
         ]);
         setStats({
           totalBooks: books.length || 0,
-          activeLendings: lendings.filter((l: any) => l.status === 'ACTIVE').length || 0
+          activeLendings: lendings.filter((l: { status: string }) => l.status === 'ACTIVE').length || 0
         });
       } catch (error) {
         console.error('Failed to fetch stats', error);

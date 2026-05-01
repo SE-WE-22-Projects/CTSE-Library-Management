@@ -1,19 +1,31 @@
 import { useEffect, useState } from 'react';
 import { lendingsApi } from '../../lib/api';
+import { AxiosError } from 'axios';
 import { useAuthStore } from '../../store/authStore';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/table';
 import { Badge } from '../../components/ui/badge';
 import { Button } from '../../components/ui/button';
-import { Clock, RefreshCw, CheckCircle2 } from 'lucide-react';
+import { RefreshCw, CheckCircle2 } from 'lucide-react';
+
+interface Lending {
+  _id: string;
+  bookId: string;
+  status: 'ACTIVE' | 'RETURNED' | 'OVERDUE';
+  reservedDate: string;
+  returnDate: string;
+  fineAmount: number;
+  extensionAttempts: number;
+}
 
 export function MyLendings() {
-  const [lendings, setLendings] = useState<any[]>([]);
+  const [lendings, setLendings] = useState<Lending[]>([]);
   const [loading, setLoading] = useState(true);
   const [processingId, setProcessingId] = useState<string | null>(null);
   const { user } = useAuthStore();
 
   useEffect(() => {
     loadLendings();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   const loadLendings = async () => {
@@ -34,8 +46,9 @@ export function MyLendings() {
     try {
       await lendingsApi.returnBook(id);
       await loadLendings();
-    } catch (err: any) {
-      alert(err.response?.data?.message || 'Failed to return book');
+    } catch (err: unknown) {
+      const axiosError = err as AxiosError<{message: string}>;
+      alert(axiosError.response?.data?.message || 'Failed to return book');
     } finally {
       setProcessingId(null);
     }
@@ -46,8 +59,9 @@ export function MyLendings() {
     try {
       await lendingsApi.extend(id);
       await loadLendings();
-    } catch (err: any) {
-      alert(err.response?.data?.message || 'Failed to extend lending');
+    } catch (err: unknown) {
+      const axiosError = err as AxiosError<{message: string}>;
+      alert(axiosError.response?.data?.message || 'Failed to extend lending');
     } finally {
       setProcessingId(null);
     }

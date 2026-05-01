@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useAuthStore } from '../../store/authStore';
 import { authApi } from '../../lib/api';
+import { AxiosError } from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
@@ -22,8 +23,9 @@ export function Login() {
       const response = await authApi.login({ email, password });
       setAuth(response.token, response.user);
       navigate('/');
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Login failed. Please try again.');
+    } catch (err: unknown) {
+      const axiosError = err as AxiosError<{message: string}>;
+      setError(axiosError.response?.data?.message || 'Login failed. Please try again.');
     } finally {
       setLoading(false);
     }

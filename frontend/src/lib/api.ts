@@ -1,12 +1,11 @@
 import { apiClient } from './axios';
-import { User } from '../store/authStore';
 
 export const authApi = {
-  login: async (data: any) => {
+  login: async (data: Record<string, unknown>) => {
     const response = await apiClient.post('/auth/login', data);
     return response.data;
   },
-  register: async (data: any) => {
+  register: async (data: Record<string, unknown>) => {
     const response = await apiClient.post('/auth/register', data);
     return response.data;
   },
@@ -21,11 +20,11 @@ export const booksApi = {
     const response = await apiClient.get(`/books/${id}`);
     return response.data;
   },
-  create: async (data: any) => {
+  create: async (data: Record<string, unknown>) => {
     const response = await apiClient.post('/books', data);
     return response.data;
   },
-  update: async (id: string, data: any) => {
+  update: async (id: string, data: Record<string, unknown>) => {
     const response = await apiClient.put(`/books/${id}`, data);
     return response.data;
   },
