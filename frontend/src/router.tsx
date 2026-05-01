@@ -9,6 +9,7 @@ import { Register } from './pages/auth/Register';
 import { BooksList } from './pages/books/BooksList';
 import { MyLendings } from './pages/lendings/MyLendings';
 import { ManageBooks } from './pages/admin/ManageBooks';
+import { ManageUsers } from './pages/admin/ManageUsers';
 import { Notifications } from './pages/notifications/Notifications';
 
 // Auth Guard Component
@@ -42,6 +43,7 @@ export const router = createBrowserRouter([
       { path: '/books', element: <BooksList /> },
       { path: '/lendings', element: <MyLendings /> },
       { path: '/admin/books', element: <ManageBooks /> },
+      { path: '/admin/users', element: <ManageUsers /> },
       { path: '/notifications', element: <Notifications /> },
     ],
   },
