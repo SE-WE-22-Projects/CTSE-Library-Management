@@ -1,4 +1,4 @@
-/* eslint-disable react-refresh/only-export-components */
+// @refresh reset
 import * as React from "react"
 
 type Theme = "dark" | "light" | "system"
