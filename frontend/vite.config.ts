@@ -14,7 +14,9 @@ export default defineConfig({
   server: {
     proxy: {
       "/api": {
-        target: "http://localhost:80/",
+        target:
+          "https://as-gateway-a2hkgaash4e6ecf2.centralindia-01.azurewebsites.net/",
+        changeOrigin: true,
       },
     },
   },
