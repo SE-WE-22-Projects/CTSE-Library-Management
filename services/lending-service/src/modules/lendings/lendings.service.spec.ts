@@ -51,7 +51,7 @@ describe('LendingsService', () => {
   ];
 
   beforeEach(async () => {
-    process.env['GATEWWAY_URL'] = 'http://gateway.local';
+    process.env['GATEWAY_URL'] = 'http://gateway.local';
 
     mockLendingModel = jest.fn().mockImplementation((dto) => ({
       ...dto,
@@ -103,7 +103,7 @@ describe('LendingsService', () => {
 
   afterEach(() => {
     jest.clearAllMocks();
-    delete process.env['GATEWWAY_URL'];
+    delete process.env['GATEWAY_URL'];
   });
 
   describe('create', () => {
