@@ -39,3 +39,16 @@ services:
     #   - lending_service
     restart: unless-stopped
     env_file: ".env"
+
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "81:80"
+    # depends_on:
+    #   - user_service
+    #   - book_service
+    #   - notification_service
+    #   - lending_service
+    restart: unless-stopped
+    env_file: ".env"
