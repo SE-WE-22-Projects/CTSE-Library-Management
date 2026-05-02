@@ -263,10 +263,8 @@ export class LendingsService {
     }
 
     const currentAvailability = this.isAvailableForLending(lending);
-    let availabilityUpdated = false;
 
     await this.updateBookAvailability(lending.bookId, true, authorization);
-    availabilityUpdated = true;
 
     const today = this.toDateOnly(new Date());
 
@@ -279,13 +277,11 @@ export class LendingsService {
     try {
       return await lending.save();
     } catch (error) {
-      if (availabilityUpdated) {
-        await this.rollbackBookAvailability(
-          lending.bookId,
-          currentAvailability,
-          authorization,
-        );
-      }
+      await this.rollbackBookAvailability(
+        lending.bookId,
+        currentAvailability,
+        authorization,
+      );
       throw error;
     }
   }
