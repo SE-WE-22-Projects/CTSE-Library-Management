@@ -10,7 +10,11 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { Model, QueryFilter } from 'mongoose';
 import { firstValueFrom } from 'rxjs';
-import { Lending, LendingDocument, LendingStatus } from './schemas/lending.schema';
+import {
+  Lending,
+  LendingDocument,
+  LendingStatus,
+} from './schemas/lending.schema';
 import { CreateLendingDto } from './dto/create-lending.dto';
 import { UpdateLendingDto } from './dto/update-lending.dto';
 
@@ -82,17 +86,11 @@ export class LendingsService {
   }
 
   async findByUserId(userId: string): Promise<LendingDocument[]> {
-    return this.lendingModel
-      .find({ userId })
-      .sort({ reservedDate: -1 })
-      .exec();
+    return this.lendingModel.find({ userId }).sort({ reservedDate: -1 }).exec();
   }
 
   async findByBookId(bookId: string): Promise<LendingDocument[]> {
-    return this.lendingModel
-      .find({ bookId })
-      .sort({ reservedDate: -1 })
-      .exec();
+    return this.lendingModel.find({ bookId }).sort({ reservedDate: -1 }).exec();
   }
 
   async findByDateRange(
@@ -103,7 +101,9 @@ export class LendingsService {
     const end = this.toDateOnly(new Date(endDate));
 
     if (start > end) {
-      throw new BadRequestException('startDate must be before or equal to endDate');
+      throw new BadRequestException(
+        'startDate must be before or equal to endDate',
+      );
     }
 
     const filter: QueryFilter<LendingDocument> = {
@@ -123,7 +123,9 @@ export class LendingsService {
     const payload: Record<string, unknown> = { ...updateLendingDto };
 
     if (updateLendingDto.returnDate) {
-      payload.returnDate = this.toDateOnly(new Date(updateLendingDto.returnDate));
+      payload.returnDate = this.toDateOnly(
+        new Date(updateLendingDto.returnDate),
+      );
     }
 
     const updated = await this.lendingModel
@@ -192,7 +194,10 @@ export class LendingsService {
     return lending.save();
   }
 
-  async applyDailyOverdueFines(): Promise<{ processed: number; updated: number }> {
+  async applyDailyOverdueFines(): Promise<{
+    processed: number;
+    updated: number;
+  }> {
     const today = this.toDateOnly(new Date());
 
     const overdueRecords = await this.lendingModel
@@ -301,11 +306,13 @@ export class LendingsService {
           `${gatewayUrl}/api/books/${bookId}/availability`,
           { isAvailable },
           {
-            headers: authorization ? { Authorization: authorization } : undefined,
+            headers: authorization
+              ? { Authorization: authorization }
+              : undefined,
           },
         ),
       );
-    } catch (error) {
+    } catch {
       throw new InternalServerErrorException(
         'Failed to update book availability',
       );
