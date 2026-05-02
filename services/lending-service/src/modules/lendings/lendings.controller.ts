@@ -92,8 +92,8 @@ export class LendingsController {
   @Patch(':id/extend')
   @ApiOperation({ summary: 'Extend lending by 7 days (max 2 attempts)' })
   @ApiParam({ name: 'id' })
-  extend(@Param('id') id: string) {
-    return this.lendingsService.extendLending(id);
+  extend(@Param('id') id: string, @Req() req: Request) {
+    return this.lendingsService.extendLending(id, req.headers.authorization);
   }
 
   @Patch(':id/return')
@@ -105,7 +105,7 @@ export class LendingsController {
 
   @Post('jobs/fines/apply')
   @ApiOperation({ summary: 'Manually trigger overdue fine calculation' })
-  applyDailyFines() {
-    return this.lendingsService.applyDailyOverdueFines();
+  applyDailyFines(@Req() req: Request) {
+    return this.lendingsService.applyDailyOverdueFines(req.headers.authorization);
   }
 }

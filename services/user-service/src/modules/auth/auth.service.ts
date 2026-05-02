@@ -3,7 +3,11 @@ import {
   ConflictException,
   Injectable,
   OnModuleInit,
+  InternalServerErrorException,
+  Logger,
 } from '@nestjs/common';
+import { HttpService } from '@nestjs/axios';
+import { firstValueFrom } from 'rxjs';
 import * as jose from 'node-jose';
 import * as fs from 'node:fs/promises';
 import { JWT } from './dto/jwt.dto';
@@ -19,10 +23,12 @@ const saltRounds = 10;
 
 @Injectable()
 export class AuthService implements OnModuleInit {
+  private readonly logger = new Logger(AuthService.name);
   private keystore: jose.JWK.KeyStore;
   constructor(
     @InjectModel(User.name)
     private userModel: Model<UserDocument>,
+    private readonly httpService: HttpService,
   ) {}
 
   async onModuleInit() {
@@ -56,12 +62,19 @@ export class AuthService implements OnModuleInit {
     try {
       const created = await user.save();
 
-      return this.signJWT({
+      const tokenBuffer = await this.signJWT({
         user_id: created._id.toHexString(),
         username: created.username,
         permissions: created.permissions,
         session_id: 'INVALID',
       });
+      
+      const tokenStr = tokenBuffer!.toString();
+
+      // Fire and forget welcome email
+      this.sendWelcomeNotification(created.email, tokenStr).catch(e => this.logger.error('Welcome email failed', e.stack));
+
+      return tokenStr;
     } catch (e) {
       if (e instanceof Error && e.message.includes('duplicate key error')) {
         throw new ConflictException('User with the same email already exists');
@@ -104,7 +117,7 @@ export class AuthService implements OnModuleInit {
       await verifier.verify(tokenStr);
       return true;
     } catch (e) {
-      console.error(`Invalid token: ${e}`);
+      this.logger.error(`Invalid token`, e.stack);
       return false;
     }
   }
@@ -128,7 +141,33 @@ export class AuthService implements OnModuleInit {
 
       return result;
     } catch (error) {
-      console.error('Error:', error);
+      this.logger.error('Error signing JWT', error.stack);
+    }
+  }
+
+  private async sendWelcomeNotification(email: string, token: string): Promise<void> {
+    const gatewayUrl = process.env['GATEWAY_URL'];
+    if (!gatewayUrl) {
+      this.logger.warn('GATEWAY_URL is not configured. Cannot send welcome email.');
+      return;
+    }
+
+    try {
+      await firstValueFrom(
+        this.httpService.post(
+          `${gatewayUrl}/api/notification/`,
+          {
+            recipient: email,
+            subject: 'Welcome to CTSE Library',
+            content: 'Thank you for registering at the CTSE Library Management System! Your account is now active.',
+          },
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          },
+        ),
+      );
+    } catch (error) {
+      this.logger.error('Failed to send welcome email via gateway', error.stack);
     }
   }
 }
