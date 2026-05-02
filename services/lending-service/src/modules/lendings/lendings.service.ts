@@ -2,12 +2,19 @@ import {
   BadRequestException,
   ConflictException,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
+import { HttpService } from '@nestjs/axios';
 import { InjectModel } from '@nestjs/mongoose';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { Model, QueryFilter } from 'mongoose';
-import { Lending, LendingDocument, LendingStatus } from './schemas/lending.schema';
+import { firstValueFrom } from 'rxjs';
+import {
+  Lending,
+  LendingDocument,
+  LendingStatus,
+} from './schemas/lending.schema';
 import { CreateLendingDto } from './dto/create-lending.dto';
 import { UpdateLendingDto } from './dto/update-lending.dto';
 
@@ -21,9 +28,13 @@ export class LendingsService {
   constructor(
     @InjectModel(Lending.name)
     private lendingModel: Model<LendingDocument>,
+    private readonly httpService: HttpService,
   ) {}
 
-  async create(createLendingDto: CreateLendingDto): Promise<LendingDocument> {
+  async create(
+    createLendingDto: CreateLendingDto,
+    authorization?: string,
+  ): Promise<LendingDocument> {
     const today = this.toDateOnly(new Date());
     const dueDate = this.addDays(today, DEFAULT_LENDING_DAYS);
 
@@ -38,7 +49,20 @@ export class LendingsService {
         status: LendingStatus.ACTIVE,
       });
 
-      return await lending.save();
+      const saved = await lending.save();
+
+      try {
+        await this.updateBookAvailability(
+          createLendingDto.bookId,
+          false,
+          authorization,
+        );
+      } catch (error) {
+        await this.lendingModel.findByIdAndDelete(saved._id).exec();
+        throw error;
+      }
+
+      return saved;
     } catch (error) {
       if (this.isDuplicateKeyError(error)) {
         throw new ConflictException('This book already has an active lending');
@@ -62,17 +86,11 @@ export class LendingsService {
   }
 
   async findByUserId(userId: string): Promise<LendingDocument[]> {
-    return this.lendingModel
-      .find({ userId })
-      .sort({ reservedDate: -1 })
-      .exec();
+    return this.lendingModel.find({ userId }).sort({ reservedDate: -1 }).exec();
   }
 
   async findByBookId(bookId: string): Promise<LendingDocument[]> {
-    return this.lendingModel
-      .find({ bookId })
-      .sort({ reservedDate: -1 })
-      .exec();
+    return this.lendingModel.find({ bookId }).sort({ reservedDate: -1 }).exec();
   }
 
   async findByDateRange(
@@ -83,7 +101,9 @@ export class LendingsService {
     const end = this.toDateOnly(new Date(endDate));
 
     if (start > end) {
-      throw new BadRequestException('startDate must be before or equal to endDate');
+      throw new BadRequestException(
+        'startDate must be before or equal to endDate',
+      );
     }
 
     const filter: QueryFilter<LendingDocument> = {
@@ -99,32 +119,110 @@ export class LendingsService {
   async update(
     id: string,
     updateLendingDto: UpdateLendingDto,
+    authorization?: string,
   ): Promise<LendingDocument> {
+    const existing = await this.findById(id);
     const payload: Record<string, unknown> = { ...updateLendingDto };
+    const currentAvailability = this.isAvailableForLending(existing);
+    let desiredAvailability: boolean | undefined;
 
     if (updateLendingDto.returnDate) {
-      payload.returnDate = this.toDateOnly(new Date(updateLendingDto.returnDate));
+      payload.returnDate = this.toDateOnly(
+        new Date(updateLendingDto.returnDate),
+      );
     }
 
-    const updated = await this.lendingModel
-      .findByIdAndUpdate(id, payload, { new: true })
-      .exec();
-
-    if (!updated) {
-      throw new NotFoundException('Lending record not found');
+    if (updateLendingDto.status) {
+      if (updateLendingDto.status === LendingStatus.RETURNED) {
+        desiredAvailability = true;
+        payload.isActive = false;
+      } else {
+        desiredAvailability = false;
+        payload.isActive = true;
+      }
     }
 
-    return updated;
+    let availabilityUpdated = false;
+
+    if (
+      typeof desiredAvailability === 'boolean' &&
+      desiredAvailability !== currentAvailability
+    ) {
+      await this.updateBookAvailability(
+        existing.bookId,
+        desiredAvailability,
+        authorization,
+      );
+      availabilityUpdated = true;
+    }
+
+    try {
+      const updated = await this.lendingModel
+        .findByIdAndUpdate(id, payload, { new: true })
+        .exec();
+
+      if (!updated) {
+        if (availabilityUpdated) {
+          await this.rollbackBookAvailability(
+            existing.bookId,
+            currentAvailability,
+            authorization,
+          );
+        }
+        throw new NotFoundException('Lending record not found');
+      }
+
+      return updated;
+    } catch (error) {
+      if (availabilityUpdated) {
+        await this.rollbackBookAvailability(
+          existing.bookId,
+          currentAvailability,
+          authorization,
+        );
+      }
+      throw error;
+    }
   }
 
-  async delete(id: string): Promise<{ message: string }> {
-    const deleted = await this.lendingModel.findByIdAndDelete(id).exec();
+  async delete(
+    id: string,
+    authorization?: string,
+  ): Promise<{ message: string }> {
+    const lending = await this.findById(id);
+    const currentAvailability = this.isAvailableForLending(lending);
+    let availabilityUpdated = false;
 
-    if (!deleted) {
-      throw new NotFoundException('Lending record not found');
+    if (!currentAvailability) {
+      await this.updateBookAvailability(lending.bookId, true, authorization);
+      availabilityUpdated = true;
     }
 
-    return { message: 'Lending record deleted successfully' };
+    try {
+      const deleted = await this.lendingModel.findByIdAndDelete(id).exec();
+
+      if (!deleted) {
+        if (availabilityUpdated) {
+          await this.rollbackBookAvailability(
+            lending.bookId,
+            currentAvailability,
+            authorization,
+          );
+        }
+        throw new NotFoundException('Lending record not found');
+      }
+
+      return { message: 'Lending record deleted successfully' };
+    } catch (error) {
+      if (availabilityUpdated) {
+        await this.rollbackBookAvailability(
+          lending.bookId,
+          currentAvailability,
+          authorization,
+        );
+      }
+      throw error;
+    }
   }
 
   async extendLending(id: string): Promise<LendingDocument> {
@@ -154,25 +252,44 @@ export class LendingsService {
     return lending.save();
   }
 
-  async returnLending(id: string): Promise<LendingDocument> {
+  async returnLending(
+    id: string,
+    authorization?: string,
+  ): Promise<LendingDocument> {
     const lending = await this.findById(id);
 
     if (!lending.isActive) {
       throw new BadRequestException('Book is already returned');
     }
 
+    const currentAvailability = this.isAvailableForLending(lending);
+
+    await this.updateBookAvailability(lending.bookId, true, authorization);
+
     const today = this.toDateOnly(new Date());
 
-    await this.applyFineUpToDate(lending, today);
+    await this.applyFineUpToDate(lending, today, false);
 
     lending.actualReturnDate = today;
     lending.isActive = false;
     lending.status = LendingStatus.RETURNED;
 
-    return lending.save();
+    try {
+      return await lending.save();
+    } catch (error) {
+      await this.rollbackBookAvailability(
+        lending.bookId,
+        currentAvailability,
+        authorization,
+      );
+      throw error;
+    }
   }
 
-  async applyDailyOverdueFines(): Promise<{ processed: number; updated: number }> {
+  async applyDailyOverdueFines(): Promise<{
+    processed: number;
+    updated: number;
+  }> {
     const today = this.toDateOnly(new Date());
 
     const overdueRecords = await this.lendingModel
@@ -211,6 +328,7 @@ export class LendingsService {
   private async applyFineUpToDate(
     lending: LendingDocument,
     targetDate: Date,
+    persist = true,
   ): Promise<boolean> {
     const dueDate = this.toDateOnly(new Date(lending.returnDate));
 
@@ -232,9 +350,27 @@ export class LendingsService {
     lending.fineAmount = Number(newFine.toFixed(2));
     lending.lastFineAppliedDate = targetDate;
 
-    await lending.save();
+    if (persist) {
+      await lending.save();
+    }
 
     return true;
+  }
+
+  private isAvailableForLending(lending: LendingDocument): boolean {
+    return !lending.isActive || lending.status === LendingStatus.RETURNED;
+  }
+
+  private async rollbackBookAvailability(
+    bookId: string,
+    isAvailable: boolean,
+    authorization?: string,
+  ): Promise<void> {
+    try {
+      await this.updateBookAvailability(bookId, isAvailable, authorization);
+    } catch {
+      // Intentionally ignore rollback failures to preserve original error.
+    }
   }
 
   private toDateOnly(date: Date): Date {
@@ -262,5 +398,35 @@ export class LendingsService {
       'code' in error &&
       (error as { code: number }).code === 11000
     );
+  }
+
+  private async updateBookAvailability(
+    bookId: string,
+    isAvailable: boolean,
+    authorization?: string,
+  ): Promise<void> {
+    const gatewayUrl = process.env['GATEWAY_URL'];
+
+    if (!gatewayUrl) {
+      throw new InternalServerErrorException('GATEWAY_URL is not configured');
+    }
+
+    try {
+      await firstValueFrom(
+        this.httpService.patch(
+          `${gatewayUrl}/api/books/${bookId}/availability`,
+          { isAvailable },
+          {
+            headers: authorization
+              ? { Authorization: authorization }
+              : undefined,
+          },
+        ),
+      );
+    } catch {
+      throw new InternalServerErrorException(
+        'Failed to update book availability',
+      );
+    }
   }
 }

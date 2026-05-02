@@ -8,13 +8,10 @@ import {
   Post,
   Put,
   Query,
+  Req,
 } from '@nestjs/common';
-import {
-  ApiOperation,
-  ApiParam,
-  ApiQuery,
-  ApiTags,
-} from '@nestjs/swagger';
+import { Request } from 'express';
+import { ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { LendingsService } from './lendings.service';
 import { CreateLendingDto } from './dto/create-lending.dto';
 import { UpdateLendingDto } from './dto/update-lending.dto';
@@ -26,8 +23,8 @@ export class LendingsController {
 
   @Post()
   @ApiOperation({ summary: 'Create a new lending record' })
-  create(@Body() dto: CreateLendingDto) {
-    return this.lendingsService.create(dto);
+  create(@Body() dto: CreateLendingDto, @Req() req: Request) {
+    return this.lendingsService.create(dto, req.headers.authorization);
   }
 
   @Get()
@@ -77,15 +74,19 @@ export class LendingsController {
   @Put(':id')
   @ApiOperation({ summary: 'Update lending by id' })
   @ApiParam({ name: 'id' })
-  update(@Param('id') id: string, @Body() dto: UpdateLendingDto) {
-    return this.lendingsService.update(id, dto);
+  update(
+    @Param('id') id: string,
+    @Body() dto: UpdateLendingDto,
+    @Req() req: Request,
+  ) {
+    return this.lendingsService.update(id, dto, req.headers.authorization);
   }
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete lending by id' })
   @ApiParam({ name: 'id' })
-  delete(@Param('id') id: string) {
-    return this.lendingsService.delete(id);
+  delete(@Param('id') id: string, @Req() req: Request) {
+    return this.lendingsService.delete(id, req.headers.authorization);
   }
 
   @Patch(':id/extend')
@@ -98,8 +99,8 @@ export class LendingsController {
   @Patch(':id/return')
   @ApiOperation({ summary: 'Mark lending as returned' })
   @ApiParam({ name: 'id' })
-  returnLending(@Param('id') id: string) {
-    return this.lendingsService.returnLending(id);
+  returnLending(@Param('id') id: string, @Req() req: Request) {
+    return this.lendingsService.returnLending(id, req.headers.authorization);
   }
 
   @Post('jobs/fines/apply')

@@ -61,6 +61,16 @@ export class BooksService {
     return updated;
   }
 
+  // UPDATE AVAILABILITY
+  async updateAvailability(id: string, isAvailable: boolean): Promise<Book> {
+    const updated = await this.bookModel
+      .findByIdAndUpdate(id, { isAvailable }, { new: true })
+      .exec();
+
+    if (!updated) throw new NotFoundException('Book not found');
+    return updated;
+  }
+
   // DELETE
   async delete(id: string): Promise<{ message: string }> {
     const result = await this.bookModel.findByIdAndDelete(id).exec();

@@ -44,7 +44,10 @@ export class Lending {
 
 export const LendingSchema = SchemaFactory.createForClass(Lending);
 
-LendingSchema.index({ bookId: 1 }, { unique: true, partialFilterExpression: { isActive: true } });
+LendingSchema.index(
+  { bookId: 1 },
+  { unique: true, partialFilterExpression: { isActive: true } },
+);
 LendingSchema.index({ userId: 1, reservedDate: -1 });
 LendingSchema.index({ bookId: 1, reservedDate: -1 });
 LendingSchema.index({ isActive: 1, returnDate: 1 });
