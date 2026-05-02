@@ -1,6 +1,7 @@
 /* eslint-disable */
 import { Test, TestingModule } from '@nestjs/testing';
 import { getModelToken } from '@nestjs/mongoose';
+import { HttpService } from '@nestjs/axios';
 import {
   BadRequestException,
   ConflictException,
@@ -10,10 +11,12 @@ import { LendingsService } from './lendings.service';
 import { Lending, LendingStatus } from './schemas/lending.schema';
 import { CreateLendingDto } from './dto/create-lending.dto';
 import { UpdateLendingDto } from './dto/update-lending.dto';
+import { of } from 'rxjs';
 
 describe('LendingsService', () => {
   let service: LendingsService;
   let mockLendingModel: any;
+  let mockHttpService: any;
 
   const mockLending = {
     _id: '507f1f77bcf86cd799439011',
@@ -48,6 +51,8 @@ describe('LendingsService', () => {
   ];
 
   beforeEach(async () => {
+    process.env['GATEWWAY_URL'] = 'http://gateway.local';
+
     mockLendingModel = jest.fn().mockImplementation((dto) => ({
       ...dto,
       _id: '507f1f77bcf86cd799439011',
@@ -69,6 +74,10 @@ describe('LendingsService', () => {
       }),
     }));
 
+    mockHttpService = {
+      patch: jest.fn().mockReturnValue(of({ data: {} })),
+    };
+
     mockLendingModel.find = jest.fn();
     mockLendingModel.findById = jest.fn();
     mockLendingModel.findByIdAndUpdate = jest.fn();
@@ -82,6 +91,10 @@ describe('LendingsService', () => {
           provide: getModelToken(Lending.name),
           useValue: mockLendingModel,
         },
+        {
+          provide: HttpService,
+          useValue: mockHttpService,
+        },
       ],
     }).compile();
 
@@ -90,6 +103,7 @@ describe('LendingsService', () => {
 
   afterEach(() => {
     jest.clearAllMocks();
+    delete process.env['GATEWWAY_URL'];
   });
 
   describe('create', () => {
@@ -348,7 +362,9 @@ describe('LendingsService', () => {
 
       const toDateOnlySpy = jest
         .spyOn(service as any, 'toDateOnly')
-        .mockReturnValue(new Date('2023-01-10'));
+        .mockReturnValueOnce(new Date('2023-01-10T00:00:00.000Z'))
+        .mockReturnValueOnce(new Date('2023-01-15T00:00:00.000Z'))
+        .mockReturnValueOnce(new Date('2023-01-22T00:00:00.000Z'));
 
       const result = await service.extendLending('507f1f77bcf86cd799439011');
 
