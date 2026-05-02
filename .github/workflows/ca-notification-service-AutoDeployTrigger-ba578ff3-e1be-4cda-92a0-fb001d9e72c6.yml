@@ -1,0 +1,49 @@
+name: Trigger auto deployment for ca-notification-service
+
+# When this action will be executed
+on:
+  # Automatically trigger it when detected changes in repo
+  push:
+    branches: 
+      [ main ]
+    paths:
+    - '**'
+    - '.github/workflows/ca-notification-service-AutoDeployTrigger-ba578ff3-e1be-4cda-92a0-fb001d9e72c6.yml'
+
+  # Allow manual trigger 
+  workflow_dispatch:      
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions: 
+      id-token: write #This is required for requesting the OIDC JWT Token
+      contents: read #Required when GH token is used to authenticate with private repo
+
+    steps:
+      - name: Checkout to the branch
+        uses: actions/checkout@v2
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.CANOTIFICATIONSERVICE_AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.CANOTIFICATIONSERVICE_AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.CANOTIFICATIONSERVICE_AZURE_SUBSCRIPTION_ID }}
+
+      - name: Build and push container image to registry
+        uses: azure/container-apps-deploy-action@v2
+        with:
+          appSourcePath: ${{ github.workspace }}/services/notification-service
+          _dockerfilePathKey_: _dockerfilePath_
+          _targetLabelKey_: _targetLabel_
+          registryUrl: ctselibrarymanagement.azurecr.io
+          registryUsername: ${{ secrets.CANOTIFICATIONSERVICE_REGISTRY_USERNAME }}
+          registryPassword: ${{ secrets.CANOTIFICATIONSERVICE_REGISTRY_PASSWORD }}
+          containerAppName: ca-notification-service
+          resourceGroup: rg-ctse-library-management
+          imageToBuild: ctselibrarymanagement.azurecr.io/ca-notification-service:${{ github.sha }}
+          _buildArgumentsKey_: |
+            _buildArgumentsValues_
+
+
