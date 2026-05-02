@@ -2,11 +2,14 @@ import {
   BadRequestException,
   ConflictException,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
+import { HttpService } from '@nestjs/axios';
 import { InjectModel } from '@nestjs/mongoose';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { Model, QueryFilter } from 'mongoose';
+import { firstValueFrom } from 'rxjs';
 import { Lending, LendingDocument, LendingStatus } from './schemas/lending.schema';
 import { CreateLendingDto } from './dto/create-lending.dto';
 import { UpdateLendingDto } from './dto/update-lending.dto';
@@ -21,9 +24,13 @@ export class LendingsService {
   constructor(
     @InjectModel(Lending.name)
     private lendingModel: Model<LendingDocument>,
+    private readonly httpService: HttpService,
   ) {}
 
-  async create(createLendingDto: CreateLendingDto): Promise<LendingDocument> {
+  async create(
+    createLendingDto: CreateLendingDto,
+    authorization?: string,
+  ): Promise<LendingDocument> {
     const today = this.toDateOnly(new Date());
     const dueDate = this.addDays(today, DEFAULT_LENDING_DAYS);
 
@@ -38,7 +45,20 @@ export class LendingsService {
         status: LendingStatus.ACTIVE,
       });
 
-      return await lending.save();
+      const saved = await lending.save();
+
+      try {
+        await this.updateBookAvailability(
+          createLendingDto.bookId,
+          false,
+          authorization,
+        );
+      } catch (error) {
+        await this.lendingModel.findByIdAndDelete(saved._id).exec();
+        throw error;
+      }
+
+      return saved;
     } catch (error) {
       if (this.isDuplicateKeyError(error)) {
         throw new ConflictException('This book already has an active lending');
@@ -262,5 +282,33 @@ export class LendingsService {
       'code' in error &&
       (error as { code: number }).code === 11000
     );
+  }
+
+  private async updateBookAvailability(
+    bookId: string,
+    isAvailable: boolean,
+    authorization?: string,
+  ): Promise<void> {
+    const gatewayUrl = process.env['GATEWWAY_URL'];
+
+    if (!gatewayUrl) {
+      throw new InternalServerErrorException('GATEWWAY_URL is not configured');
+    }
+
+    try {
+      await firstValueFrom(
+        this.httpService.patch(
+          `${gatewayUrl}/api/books/${bookId}/availability`,
+          { isAvailable },
+          {
+            headers: authorization ? { Authorization: authorization } : undefined,
+          },
+        ),
+      );
+    } catch (error) {
+      throw new InternalServerErrorException(
+        'Failed to update book availability',
+      );
+    }
   }
 }

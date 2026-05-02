@@ -7,10 +7,12 @@ import {
   Query,
   Put,
   Delete,
+  Patch,
 } from '@nestjs/common';
 import { BooksService } from './books.service';
 import { CreateBookDto } from './dto/create-book.dto';
 import { UpdateBookDto } from './dto/update-book.dto';
+import { UpdateAvailabilityDto } from './dto/update-availability.dto';
 import { ApiTags, ApiOperation, ApiQuery, ApiParam } from '@nestjs/swagger';
 
 @ApiTags('Books')
@@ -56,6 +58,16 @@ export class BooksController {
   @ApiParam({ name: 'id' })
   update(@Param('id') id: string, @Body() dto: UpdateBookDto) {
     return this.booksService.update(id, dto);
+  }
+
+  @Patch(':id/availability')
+  @ApiOperation({ summary: 'Update book availability by ID' })
+  @ApiParam({ name: 'id' })
+  updateAvailability(
+    @Param('id') id: string,
+    @Body() dto: UpdateAvailabilityDto,
+  ) {
+    return this.booksService.updateAvailability(id, dto.isAvailable);
   }
 
   @Delete(':id')

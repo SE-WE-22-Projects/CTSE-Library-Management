@@ -8,7 +8,9 @@ import {
   Post,
   Put,
   Query,
+  Req,
 } from '@nestjs/common';
+import { Request } from 'express';
 import {
   ApiOperation,
   ApiParam,
@@ -26,8 +28,8 @@ export class LendingsController {
 
   @Post()
   @ApiOperation({ summary: 'Create a new lending record' })
-  create(@Body() dto: CreateLendingDto) {
-    return this.lendingsService.create(dto);
+  create(@Body() dto: CreateLendingDto, @Req() req: Request) {
+    return this.lendingsService.create(dto, req.headers.authorization);
   }
 
   @Get()
