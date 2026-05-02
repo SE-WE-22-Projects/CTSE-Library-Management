@@ -4,19 +4,18 @@ name: Trigger auto deployment for ca-user-service
 on:
   # Automatically trigger it when detected changes in repo
   push:
-    branches: 
-      [ main ]
+    branches: [main]
     paths:
-    - '**'
-    - '.github/workflows/ca-user-service-AutoDeployTrigger-7cfacdf8-526a-43cd-96bb-fe550a61922f.yml'
+      - "services/user-service/**"
+      - ".github/workflows/ca-user-service-AutoDeployTrigger-7cfacdf8-526a-43cd-96bb-fe550a61922f.yml"
 
-  # Allow manual trigger 
-  workflow_dispatch:      
+  # Allow manual trigger
+  workflow_dispatch:
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    permissions: 
+    permissions:
       id-token: write #This is required for requesting the OIDC JWT Token
       contents: read #Required when GH token is used to authenticate with private repo
 
@@ -45,5 +44,3 @@ jobs:
           imageToBuild: ctselibrarymanagement.azurecr.io/ca-user-service:${{ github.sha }}
           _buildArgumentsKey_: |
             _buildArgumentsValues_
-
-
