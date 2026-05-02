@@ -7,7 +7,7 @@ on:
     branches: 
       [ main ]
     paths:
-    - '**'
+    - "frontend/**"
     - '.github/workflows/frontend-AutoDeployTrigger-06d0c283-2e37-4812-b49a-23ae3beac39f.yml'
 
   # Allow manual trigger 
