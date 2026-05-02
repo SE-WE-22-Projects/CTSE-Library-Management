@@ -15,7 +15,7 @@ export default defineConfig({
     proxy: {
       "/api": {
         target:
-          "https://as-gateway-a2hkgaash4e6ecf2.centralindia-01.azurewebsites.net/",
+          "https://ca-gateway.calmstone-c9854610.centralindia.azurecontainerapps.io",
         changeOrigin: true,
       },
     },
