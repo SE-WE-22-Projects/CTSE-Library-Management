@@ -10,7 +10,7 @@ import {
   Query,
   Req,
 } from '@nestjs/common';
-import { Request } from 'express';
+import { type Request } from 'express';
 import { ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { LendingsService } from './lendings.service';
 import { CreateLendingDto } from './dto/create-lending.dto';
