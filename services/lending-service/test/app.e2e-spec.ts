@@ -21,8 +21,9 @@ describe('Health (e2e)', () => {
       .get('/api/health')
       .expect(200)
       .expect((response) => {
-        expect(response.body.healthy).toBe(true);
-        expect(response.body.version).toBeDefined();
+        const body = response.body as { healthy: boolean; version: string };
+        expect(body.healthy).toBe(true);
+        expect(body.version).toBeDefined();
       });
   });
 });
