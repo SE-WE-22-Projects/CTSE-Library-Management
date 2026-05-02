@@ -294,10 +294,10 @@ export class LendingsService {
     isAvailable: boolean,
     authorization?: string,
   ): Promise<void> {
-    const gatewayUrl = process.env['GATEWWAY_URL'];
+    const gatewayUrl = process.env['GATEWAY_URL'];
 
     if (!gatewayUrl) {
-      throw new InternalServerErrorException('GATEWWAY_URL is not configured');
+      throw new InternalServerErrorException('GATEWAY_URL is not configured');
     }
 
     try {
