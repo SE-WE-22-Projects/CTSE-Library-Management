@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, InternalServerErrorException, Logger } from '@nestjs/common';
+import { Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 import { InjectModel } from '@nestjs/mongoose';
@@ -18,12 +18,17 @@ export class BooksService {
   ) {}
 
   // CREATE
-  async create(createBookDto: CreateBookDto, authorization?: string): Promise<Book> {
+  async create(
+    createBookDto: CreateBookDto,
+    authorization?: string,
+  ): Promise<Book> {
     const book = new this.bookModel(createBookDto);
     const saved = await book.save();
-    
+
     // Broadcast notification asynchronously
-    this.broadcastNewBook(saved.title, authorization).catch(e => this.logger.error(`Broadcast failed`, e.stack));
+    this.broadcastNewBook(saved.title, authorization).catch((e) =>
+      this.logger.error(`Broadcast failed`, e.stack),
+    );
 
     return saved;
   }
@@ -89,10 +94,15 @@ export class BooksService {
     return { message: 'Book deleted successfully' };
   }
 
-  private async broadcastNewBook(title: string, authorization?: string): Promise<void> {
+  private async broadcastNewBook(
+    title: string,
+    authorization?: string,
+  ): Promise<void> {
     const gatewayUrl = process.env['GATEWAY_URL'];
     if (!gatewayUrl) {
-      this.logger.warn('GATEWAY_URL is not configured. Cannot broadcast new book.');
+      this.logger.warn(
+        'GATEWAY_URL is not configured. Cannot broadcast new book.',
+      );
       return;
     }
 
@@ -120,10 +130,14 @@ export class BooksService {
                 content: `Great news! We have just added "${title}" to our library catalog. Check it out now!`,
               },
               {
-                headers: authorization ? { Authorization: authorization } : undefined,
+                headers: authorization
+                  ? { Authorization: authorization }
+                  : undefined,
               },
             ),
-          ).catch((e) => this.logger.error(`Failed to notify ${u.email}`, e.stack)),
+          ).catch((e) =>
+            this.logger.error(`Failed to notify ${u.email}`, e.stack),
+          ),
         );
 
       await Promise.allSettled(notifyPromises);

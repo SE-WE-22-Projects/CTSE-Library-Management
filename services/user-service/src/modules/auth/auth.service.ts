@@ -3,7 +3,6 @@ import {
   ConflictException,
   Injectable,
   OnModuleInit,
-  InternalServerErrorException,
   Logger,
 } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
@@ -68,11 +67,13 @@ export class AuthService implements OnModuleInit {
         permissions: created.permissions,
         session_id: 'INVALID',
       });
-      
+
       const tokenStr = tokenBuffer!.toString();
 
       // Fire and forget welcome email
-      this.sendWelcomeNotification(created.email, tokenStr).catch(e => this.logger.error('Welcome email failed', e.stack));
+      this.sendWelcomeNotification(created.email, tokenStr).catch((e) =>
+        this.logger.error('Welcome email failed', e),
+      );
 
       return tokenStr;
     } catch (e) {
@@ -145,10 +146,15 @@ export class AuthService implements OnModuleInit {
     }
   }
 
-  private async sendWelcomeNotification(email: string, token: string): Promise<void> {
+  private async sendWelcomeNotification(
+    email: string,
+    token: string,
+  ): Promise<void> {
     const gatewayUrl = process.env['GATEWAY_URL'];
     if (!gatewayUrl) {
-      this.logger.warn('GATEWAY_URL is not configured. Cannot send welcome email.');
+      this.logger.warn(
+        'GATEWAY_URL is not configured. Cannot send welcome email.',
+      );
       return;
     }
 
@@ -159,7 +165,8 @@ export class AuthService implements OnModuleInit {
           {
             recipient: email,
             subject: 'Welcome to CTSE Library',
-            content: 'Thank you for registering at the CTSE Library Management System! Your account is now active.',
+            content:
+              'Thank you for registering at the CTSE Library Management System! Your account is now active.',
           },
           {
             headers: { Authorization: `Bearer ${token}` },
@@ -167,7 +174,10 @@ export class AuthService implements OnModuleInit {
         ),
       );
     } catch (error) {
-      this.logger.error('Failed to send welcome email via gateway', error.stack);
+      this.logger.error(
+        'Failed to send welcome email via gateway',
+        error.stack,
+      );
     }
   }
 }
