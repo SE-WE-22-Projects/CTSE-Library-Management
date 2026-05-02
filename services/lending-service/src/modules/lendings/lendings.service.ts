@@ -119,8 +119,12 @@ export class LendingsService {
   async update(
     id: string,
     updateLendingDto: UpdateLendingDto,
+    authorization?: string,
   ): Promise<LendingDocument> {
+    const existing = await this.findById(id);
     const payload: Record<string, unknown> = { ...updateLendingDto };
+    const currentAvailability = this.isAvailableForLending(existing);
+    let desiredAvailability: boolean | undefined;
 
     if (updateLendingDto.returnDate) {
       payload.returnDate = this.toDateOnly(
@@ -128,25 +132,97 @@ export class LendingsService {
       );
     }
 
-    const updated = await this.lendingModel
-      .findByIdAndUpdate(id, payload, { new: true })
-      .exec();
-
-    if (!updated) {
-      throw new NotFoundException('Lending record not found');
+    if (updateLendingDto.status) {
+      if (updateLendingDto.status === LendingStatus.RETURNED) {
+        desiredAvailability = true;
+        payload.isActive = false;
+      } else {
+        desiredAvailability = false;
+        payload.isActive = true;
+      }
     }
 
-    return updated;
+    let availabilityUpdated = false;
+
+    if (
+      typeof desiredAvailability === 'boolean' &&
+      desiredAvailability !== currentAvailability
+    ) {
+      await this.updateBookAvailability(
+        existing.bookId,
+        desiredAvailability,
+        authorization,
+      );
+      availabilityUpdated = true;
+    }
+
+    try {
+      const updated = await this.lendingModel
+        .findByIdAndUpdate(id, payload, { new: true })
+        .exec();
+
+      if (!updated) {
+        if (availabilityUpdated) {
+          await this.rollbackBookAvailability(
+            existing.bookId,
+            currentAvailability,
+            authorization,
+          );
+        }
+        throw new NotFoundException('Lending record not found');
+      }
+
+      return updated;
+    } catch (error) {
+      if (availabilityUpdated) {
+        await this.rollbackBookAvailability(
+          existing.bookId,
+          currentAvailability,
+          authorization,
+        );
+      }
+      throw error;
+    }
   }
 
-  async delete(id: string): Promise<{ message: string }> {
-    const deleted = await this.lendingModel.findByIdAndDelete(id).exec();
+  async delete(
+    id: string,
+    authorization?: string,
+  ): Promise<{ message: string }> {
+    const lending = await this.findById(id);
+    const currentAvailability = this.isAvailableForLending(lending);
+    let availabilityUpdated = false;
 
-    if (!deleted) {
-      throw new NotFoundException('Lending record not found');
+    if (!currentAvailability) {
+      await this.updateBookAvailability(lending.bookId, true, authorization);
+      availabilityUpdated = true;
     }
 
-    return { message: 'Lending record deleted successfully' };
+    try {
+      const deleted = await this.lendingModel.findByIdAndDelete(id).exec();
+
+      if (!deleted) {
+        if (availabilityUpdated) {
+          await this.rollbackBookAvailability(
+            lending.bookId,
+            currentAvailability,
+            authorization,
+          );
+        }
+        throw new NotFoundException('Lending record not found');
+      }
+
+      return { message: 'Lending record deleted successfully' };
+    } catch (error) {
+      if (availabilityUpdated) {
+        await this.rollbackBookAvailability(
+          lending.bookId,
+          currentAvailability,
+          authorization,
+        );
+      }
+      throw error;
+    }
   }
 
   async extendLending(id: string): Promise<LendingDocument> {
@@ -176,22 +252,42 @@ export class LendingsService {
     return lending.save();
   }
 
-  async returnLending(id: string): Promise<LendingDocument> {
+  async returnLending(
+    id: string,
+    authorization?: string,
+  ): Promise<LendingDocument> {
     const lending = await this.findById(id);
 
     if (!lending.isActive) {
       throw new BadRequestException('Book is already returned');
     }
 
+    const currentAvailability = this.isAvailableForLending(lending);
+    let availabilityUpdated = false;
+
+    await this.updateBookAvailability(lending.bookId, true, authorization);
+    availabilityUpdated = true;
+
     const today = this.toDateOnly(new Date());
 
-    await this.applyFineUpToDate(lending, today);
+    await this.applyFineUpToDate(lending, today, false);
 
     lending.actualReturnDate = today;
     lending.isActive = false;
     lending.status = LendingStatus.RETURNED;
 
-    return lending.save();
+    try {
+      return await lending.save();
+    } catch (error) {
+      if (availabilityUpdated) {
+        await this.rollbackBookAvailability(
+          lending.bookId,
+          currentAvailability,
+          authorization,
+        );
+      }
+      throw error;
+    }
   }
 
   async applyDailyOverdueFines(): Promise<{
@@ -236,6 +332,7 @@ export class LendingsService {
   private async applyFineUpToDate(
     lending: LendingDocument,
     targetDate: Date,
+    persist = true,
   ): Promise<boolean> {
     const dueDate = this.toDateOnly(new Date(lending.returnDate));
 
@@ -257,9 +354,27 @@ export class LendingsService {
     lending.fineAmount = Number(newFine.toFixed(2));
     lending.lastFineAppliedDate = targetDate;
 
-    await lending.save();
+    if (persist) {
+      await lending.save();
+    }
 
     return true;
+  }
+
+  private isAvailableForLending(lending: LendingDocument): boolean {
+    return !lending.isActive || lending.status === LendingStatus.RETURNED;
+  }
+
+  private async rollbackBookAvailability(
+    bookId: string,
+    isAvailable: boolean,
+    authorization?: string,
+  ): Promise<void> {
+    try {
+      await this.updateBookAvailability(bookId, isAvailable, authorization);
+    } catch {
+      // Intentionally ignore rollback failures to preserve original error.
+    }
   }
 
   private toDateOnly(date: Date): Date {

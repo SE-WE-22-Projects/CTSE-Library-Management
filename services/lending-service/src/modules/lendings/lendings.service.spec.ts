@@ -277,6 +277,10 @@ describe('LendingsService', () => {
         .spyOn(service as any, 'toDateOnly')
         .mockReturnValue(normalizedReturnDate);
 
+      mockLendingModel.findById.mockReturnValue({
+        exec: jest.fn().mockResolvedValue(mockLending),
+      });
+
       mockLendingModel.findByIdAndUpdate.mockReturnValue({
         exec: jest.fn().mockResolvedValue({
           ...mockLending,
@@ -298,15 +302,63 @@ describe('LendingsService', () => {
         {
           ...updateLendingDto,
           returnDate: normalizedReturnDate,
+          isActive: false,
         },
         { new: true },
+      );
+      expect(mockHttpService.patch).toHaveBeenCalledWith(
+        'http://gateway.local/api/books/507f1f77bcf86cd799439012/availability',
+        { isAvailable: true },
+        { headers: undefined },
       );
 
       toDateOnlySpy.mockRestore();
     });
 
-    it('should throw NotFoundException if lending not found', async () => {
+    it('should mark book unavailable when status becomes ACTIVE', async () => {
+      const updateLendingDto: UpdateLendingDto = {
+        status: LendingStatus.ACTIVE,
+      };
+
+      const existing = {
+        ...mockLending,
+        isActive: false,
+        status: LendingStatus.RETURNED,
+      };
+
+      mockLendingModel.findById.mockReturnValue({
+        exec: jest.fn().mockResolvedValue(existing),
+      });
+
       mockLendingModel.findByIdAndUpdate.mockReturnValue({
+        exec: jest.fn().mockResolvedValue({
+          ...existing,
+          ...updateLendingDto,
+          isActive: true,
+        }),
+      });
+
+      const result = await service.update(
+        '507f1f77bcf86cd799439011',
+        updateLendingDto,
+      );
+
+      expect(result.isActive).toBe(true);
+      expect(result.status).toBe(LendingStatus.ACTIVE);
+      expect(mockLendingModel.findByIdAndUpdate).toHaveBeenCalledWith(
+        '507f1f77bcf86cd799439011',
+        { ...updateLendingDto, isActive: true },
+        { new: true },
+      );
+      expect(mockHttpService.patch).toHaveBeenCalledWith(
+        'http://gateway.local/api/books/507f1f77bcf86cd799439012/availability',
+        { isAvailable: false },
+        { headers: undefined },
+      );
+    });
+
+    it('should throw NotFoundException if lending not found', async () => {
+      mockLendingModel.findById.mockReturnValue({
         exec: jest.fn().mockResolvedValue(null),
       });
 
@@ -318,6 +370,9 @@ describe('LendingsService', () => {
 
   describe('delete', () => {
     it('should delete lending successfully', async () => {
+      mockLendingModel.findById.mockReturnValue({
+        exec: jest.fn().mockResolvedValue(mockLending),
+      });
       mockLendingModel.findByIdAndDelete.mockReturnValue({
         exec: jest.fn().mockResolvedValue(mockLending),
       });
@@ -330,16 +385,49 @@ describe('LendingsService', () => {
       expect(mockLendingModel.findByIdAndDelete).toHaveBeenCalledWith(
         '507f1f77bcf86cd799439011',
       );
+      expect(mockHttpService.patch).toHaveBeenCalledWith(
+        'http://gateway.local/api/books/507f1f77bcf86cd799439012/availability',
+        { isAvailable: true },
+        { headers: undefined },
+      );
+    });
+
+    it('should rollback availability if delete fails', async () => {
+      const error = new Error('delete failed');
+      mockLendingModel.findById.mockReturnValue({
+        exec: jest.fn().mockResolvedValue(mockLending),
+      });
+      mockLendingModel.findByIdAndDelete.mockReturnValue({
+        exec: jest.fn().mockRejectedValue(error),
+      });
+
+      await expect(service.delete('507f1f77bcf86cd799439011')).rejects.toThrow(
+        error,
+      );
+
+      expect(mockHttpService.patch).toHaveBeenNthCalledWith(
+        1,
+        'http://gateway.local/api/books/507f1f77bcf86cd799439012/availability',
+        { isAvailable: true },
+        { headers: undefined },
+      );
+      expect(mockHttpService.patch).toHaveBeenNthCalledWith(
+        2,
+        'http://gateway.local/api/books/507f1f77bcf86cd799439012/availability',
+        { isAvailable: false },
+        { headers: undefined },
+      );
     });
 
     it('should throw NotFoundException if lending not found', async () => {
-      mockLendingModel.findByIdAndDelete.mockReturnValue({
+      mockLendingModel.findById.mockReturnValue({
         exec: jest.fn().mockResolvedValue(null),
       });
 
       await expect(service.delete('507f1f77bcf86cd799439011')).rejects.toThrow(
         NotFoundException,
       );
+      expect(mockLendingModel.findByIdAndDelete).not.toHaveBeenCalled();
     });
   });
 
@@ -440,6 +528,65 @@ describe('LendingsService', () => {
       expect(result.status).toBe(LendingStatus.RETURNED);
       expect(result.actualReturnDate).toBeDefined();
       expect(lending.save).toHaveBeenCalled();
+      expect(mockHttpService.patch).toHaveBeenCalledWith(
+        'http://gateway.local/api/books/507f1f77bcf86cd799439012/availability',
+        { isAvailable: true },
+        { headers: undefined },
+      );
+    });
+
+    it('should pass authorization header when returning a lending', async () => {
+      const lending = {
+        ...mockLending,
+        save: jest.fn().mockResolvedValue({
+          ...mockLending,
+          actualReturnDate: new Date(),
+          isActive: false,
+          status: LendingStatus.RETURNED,
+        }),
+      };
+
+      mockLendingModel.findById.mockReturnValue({
+        exec: jest.fn().mockResolvedValue(lending),
+      });
+
+      const token = 'Bearer test-token';
+      await service.returnLending('507f1f77bcf86cd799439011', token);
+
+      expect(mockHttpService.patch).toHaveBeenCalledWith(
+        'http://gateway.local/api/books/507f1f77bcf86cd799439012/availability',
+        { isAvailable: true },
+        { headers: { Authorization: token } },
+      );
+    });
+
+    it('should rollback availability if return save fails', async () => {
+      const error = new Error('save failed');
+      const lending = {
+        ...mockLending,
+        save: jest.fn().mockRejectedValue(error),
+      };
+
+      mockLendingModel.findById.mockReturnValue({
+        exec: jest.fn().mockResolvedValue(lending),
+      });
+
+      await expect(service.returnLending('507f1f77bcf86cd799439011')).rejects.toThrow(
+        error,
+      );
+
+      expect(mockHttpService.patch).toHaveBeenNthCalledWith(
+        1,
+        'http://gateway.local/api/books/507f1f77bcf86cd799439012/availability',
+        { isAvailable: true },
+        { headers: undefined },
+      );
+      expect(mockHttpService.patch).toHaveBeenNthCalledWith(
+        2,
+        'http://gateway.local/api/books/507f1f77bcf86cd799439012/availability',
+        { isAvailable: false },
+        { headers: undefined },
+      );
     });
 
     it('should throw BadRequestException if already returned', async () => {
@@ -452,6 +599,7 @@ describe('LendingsService', () => {
       await expect(
         service.returnLending('507f1f77bcf86cd799439011'),
       ).rejects.toThrow(BadRequestException);
+      expect(mockHttpService.patch).not.toHaveBeenCalled();
     });
   });
 

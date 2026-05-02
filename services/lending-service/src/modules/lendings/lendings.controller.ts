@@ -74,15 +74,19 @@ export class LendingsController {
   @Put(':id')
   @ApiOperation({ summary: 'Update lending by id' })
   @ApiParam({ name: 'id' })
-  update(@Param('id') id: string, @Body() dto: UpdateLendingDto) {
-    return this.lendingsService.update(id, dto);
+  update(
+    @Param('id') id: string,
+    @Body() dto: UpdateLendingDto,
+    @Req() req: Request,
+  ) {
+    return this.lendingsService.update(id, dto, req.headers.authorization);
   }
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete lending by id' })
   @ApiParam({ name: 'id' })
-  delete(@Param('id') id: string) {
-    return this.lendingsService.delete(id);
+  delete(@Param('id') id: string, @Req() req: Request) {
+    return this.lendingsService.delete(id, req.headers.authorization);
   }
 
   @Patch(':id/extend')
@@ -95,8 +99,8 @@ export class LendingsController {
   @Patch(':id/return')
   @ApiOperation({ summary: 'Mark lending as returned' })
   @ApiParam({ name: 'id' })
-  returnLending(@Param('id') id: string) {
-    return this.lendingsService.returnLending(id);
+  returnLending(@Param('id') id: string, @Req() req: Request) {
+    return this.lendingsService.returnLending(id, req.headers.authorization);
   }
 
   @Post('jobs/fines/apply')
