@@ -106,6 +106,8 @@ export class LendingsController {
   @Post('jobs/fines/apply')
   @ApiOperation({ summary: 'Manually trigger overdue fine calculation' })
   applyDailyFines(@Req() req: Request) {
-    return this.lendingsService.applyDailyOverdueFines(req.headers.authorization);
+    return this.lendingsService.applyDailyOverdueFines(
+      req.headers.authorization,
+    );
   }
 }
