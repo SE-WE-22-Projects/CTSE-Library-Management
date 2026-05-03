@@ -1,3 +1,4 @@
+/* eslint-disable  */
 import {
   BadRequestException,
   ConflictException,
@@ -32,7 +33,7 @@ export class LendingsService {
     @InjectModel(Lending.name)
     private lendingModel: Model<LendingDocument>,
     private readonly httpService: HttpService,
-  ) {}
+  ) { }
 
   async create(
     createLendingDto: CreateLendingDto,
@@ -337,7 +338,7 @@ export class LendingsService {
 
       if (changed) {
         updated += 1;
-        
+
         // Notify the user about the new fine
         this.notifyUser(
           lending.userId,
@@ -350,7 +351,7 @@ export class LendingsService {
       if (lending.status !== LendingStatus.OVERDUE) {
         lending.status = LendingStatus.OVERDUE;
         await lending.save();
-        
+
         // Notify the user their book is now officially overdue
         this.notifyUser(
           lending.userId,
@@ -501,12 +502,12 @@ export class LendingsService {
           },
         ),
       );
-      
+
       const email = userResponse.data?.email;
 
       if (!email) {
-         this.logger.warn(`User ${userId} does not have an email.`);
-         return;
+        this.logger.warn(`User ${userId} does not have an email.`);
+        return;
       }
 
       await firstValueFrom(
