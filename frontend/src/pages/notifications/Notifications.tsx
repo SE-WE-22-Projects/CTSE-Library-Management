@@ -9,7 +9,7 @@ interface Notification {
   _id: string;
   recipient: string;
   subject: string;
-  message: string;
+  content: string;
   status: string;
   createdAt: string;
 }
@@ -24,13 +24,8 @@ export function Notifications() {
       if (!user) return;
       try {
         setLoading(true);
-        // If the user is an admin, they might fetch all history. For a regular user, fetch by email/recipient.
-        let data: Notification[];
-        if (user.permissions?.includes('Admin')) {
-          data = await notificationsApi.getHistory();
-        } else {
-          data = await notificationsApi.getHistoryByRecipient(user.email);
-        }
+        // Fetch notifications specific to the current user
+        const data = await notificationsApi.getHistoryByRecipient(user.email);
 
         // Sort descending by date
         data.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
@@ -86,7 +81,7 @@ export function Notifications() {
               </CardHeader>
               <CardContent className="p-4 pt-3 text-sm flex items-start gap-3">
                 <Info className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
-                <p className="text-foreground/90">{notification.message}</p>
+                <p className="text-foreground/90">{notification.content}</p>
               </CardContent>
             </Card>
           ))
