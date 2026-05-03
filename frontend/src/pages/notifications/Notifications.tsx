@@ -26,12 +26,12 @@ export function Notifications() {
         setLoading(true);
         // If the user is an admin, they might fetch all history. For a regular user, fetch by email/recipient.
         let data: Notification[];
-        if (user.permissions?.includes('ADMIN')) {
+        if (user.permissions?.includes('Admin')) {
           data = await notificationsApi.getHistory();
         } else {
           data = await notificationsApi.getHistoryByRecipient(user.email);
         }
-        
+
         // Sort descending by date
         data.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
         setNotifications(data);
@@ -73,13 +73,13 @@ export function Notifications() {
                     <CardTitle className="text-base leading-none">{notification.subject}</CardTitle>
                     <CardDescription className="text-xs mt-1.5 flex items-center gap-2">
                       <span>{new Date(notification.createdAt).toLocaleString()}</span>
-                      {user?.permissions?.includes('ADMIN') && (
+                      {user?.permissions?.includes('Admin') && (
                         <span className="text-muted-foreground">• To: {notification.recipient}</span>
                       )}
                     </CardDescription>
                   </div>
                 </div>
-                <Badge variant={notification.status === 'SENT' ? 'default' : 'secondary'} 
+                <Badge variant={notification.status === 'SENT' ? 'default' : 'secondary'}
                        className={notification.status === 'SENT' ? 'bg-green-500/10 text-green-500 border-none' : ''}>
                   {notification.status}
                 </Badge>

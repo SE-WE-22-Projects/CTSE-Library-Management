@@ -70,7 +70,7 @@ describe('UserService', () => {
         email: 'test@example.com',
         password: 'Passw0rd!',
         username: 'testuser',
-        permission: 'ADMIN' as any,
+        permission: 'Admin' as any,
       };
 
       const result = await service.create(dto);
@@ -93,7 +93,7 @@ describe('UserService', () => {
         email: 'conflict@example.com',
         password: 'Passw0rd!',
         username: 'conflictuser',
-        permission: 'ADMIN' as any,
+        permission: 'Admin' as any,
       };
 
       mockUserModel.mockImplementationOnce(() => ({

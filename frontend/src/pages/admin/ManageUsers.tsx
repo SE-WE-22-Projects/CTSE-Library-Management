@@ -19,7 +19,7 @@ interface UserData {
 export function ManageUsers() {
   const [users, setUsers] = useState<UserData[]>([]);
   const [loading, setLoading] = useState(true);
-  
+
   // Form State
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
@@ -47,7 +47,7 @@ export function ManageUsers() {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      const permissions = isAdmin ? ['USER', 'ADMIN'] : ['USER'];
+      const permissions = isAdmin ? ['User', 'Admin'] : ['User'];
       await usersApi.create({
         username, email, password, permissions
       });
@@ -102,11 +102,11 @@ export function ManageUsers() {
                 <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
               </div>
               <div className="flex items-center space-x-2 pt-2">
-                <input 
-                  type="checkbox" 
-                  id="isAdmin" 
-                  checked={isAdmin} 
-                  onChange={(e) => setIsAdmin(e.target.checked)} 
+                <input
+                  type="checkbox"
+                  id="isAdmin"
+                  checked={isAdmin}
+                  onChange={(e) => setIsAdmin(e.target.checked)}
                   className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"
                 />
                 <Label htmlFor="isAdmin" className="cursor-pointer">Grant Admin Privileges</Label>
@@ -148,7 +148,7 @@ export function ManageUsers() {
                         <TableCell className="font-medium">
                           <div className="flex items-center gap-2">
                             <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                              {u.permissions?.includes('ADMIN') ? <Shield className="w-4 h-4" /> : <User className="w-4 h-4" />}
+                              {u.permissions?.includes('Admin') ? <Shield className="w-4 h-4" /> : <User className="w-4 h-4" />}
                             </div>
                             {u.username}
                           </div>
@@ -157,7 +157,7 @@ export function ManageUsers() {
                         <TableCell>
                           <div className="flex gap-1 flex-wrap">
                             {u.permissions?.map((perm) => (
-                              <Badge key={perm} variant={perm === 'ADMIN' ? 'default' : 'secondary'} className={perm === 'ADMIN' ? 'bg-primary/20 text-primary border-none hover:bg-primary/30' : ''}>
+                              <Badge key={perm} variant={perm === 'Admin' ? 'default' : 'secondary'} className={perm === 'Admin' ? 'bg-primary/20 text-primary border-none hover:bg-primary/30' : ''}>
                                 {perm}
                               </Badge>
                             ))}
