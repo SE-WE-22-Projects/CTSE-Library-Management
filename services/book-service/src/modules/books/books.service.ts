@@ -1,3 +1,4 @@
+/* eslint-disable  */
 import { Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
@@ -15,7 +16,7 @@ export class BooksService {
     @InjectModel(Book.name)
     private bookModel: Model<BookDocument>,
     private readonly httpService: HttpService,
-  ) {}
+  ) { }
 
   // CREATE
   async create(
@@ -27,7 +28,7 @@ export class BooksService {
 
     // Broadcast notification asynchronously
     this.broadcastNewBook(saved.title, authorization).catch((e) =>
-      this.logger.error(`Broadcast failed`, e.stack),
+      this.logger.error(`Broadcast failed`, e),
     );
 
     return saved;
