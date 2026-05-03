@@ -29,6 +29,7 @@
     "@nestjs/swagger": "^11.2.6",
     "@types/node-jose": "^1.1.13",
     "bcrypt": "^6.0.0",
+    "class-transformer": "^0.5.1",
     "class-validator": "^0.15.1",
     "mongoose": "^9.3.1",
     "node-jose": "^2.2.0",
