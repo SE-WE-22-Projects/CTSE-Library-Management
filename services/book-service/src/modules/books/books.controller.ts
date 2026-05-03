@@ -8,7 +8,9 @@ import {
   Put,
   Delete,
   Patch,
+  Req,
 } from '@nestjs/common';
+import { type Request } from 'express';
 import { BooksService } from './books.service';
 import { CreateBookDto } from './dto/create-book.dto';
 import { UpdateBookDto } from './dto/update-book.dto';
@@ -22,8 +24,8 @@ export class BooksController {
 
   @Post()
   @ApiOperation({ summary: 'Create a new book' })
-  create(@Body() dto: CreateBookDto) {
-    return this.booksService.create(dto);
+  create(@Body() dto: CreateBookDto, @Req() req: Request) {
+    return this.booksService.create(dto, req.headers.authorization);
   }
 
   @Get()
