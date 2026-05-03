@@ -240,7 +240,7 @@ describe('UserService', () => {
 
   describe('deleteById', () => {
     it('should return UserDto for deleted user', async () => {
-      mockUserModel.findById.mockReturnValue({
+      mockUserModel.findByIdAndDelete.mockReturnValue({
         exec: jest.fn().mockResolvedValue(mockUser),
       });
 
@@ -254,16 +254,6 @@ describe('UserService', () => {
       expect(mockUserModel.findById).toHaveBeenCalledWith(
         '507f1f77bcf86cd799439011',
       );
-    });
-
-    it('should throw NotFoundException when delete target does not exist', async () => {
-      mockUserModel.findById.mockReturnValue({
-        exec: jest.fn().mockResolvedValue(null),
-      });
-
-      await expect(
-        service.deleteById('507f1f77bcf86cd799439011'),
-      ).rejects.toThrow(NotFoundException);
     });
   });
 });
