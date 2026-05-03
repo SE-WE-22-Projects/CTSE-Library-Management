@@ -59,11 +59,11 @@ export const lendingsApi = {
 
 export const notificationsApi = {
   getHistory: async () => {
-    const response = await apiClient.get("/notification/history")
+    const response = await apiClient.get("/notifications/history")
     return response.data
   },
   getHistoryByRecipient: async (recipient: string) => {
-    const response = await apiClient.get(`/notification/history/${recipient}`)
+    const response = await apiClient.get(`/notifications/history/${recipient}`)
     return response.data
   },
 }
