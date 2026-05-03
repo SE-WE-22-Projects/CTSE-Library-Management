@@ -25,7 +25,16 @@ async function bootstrap() {
     new ValidationPipe({
       exceptionFactory: (errors) => {
         const formattedErrors = errors
-          .map((err) => `${err.property}: ${JSON.stringify(err.constraints)}`)
+          .map(
+            (err) =>
+              `${err.property}: ${
+                err.constraints
+                  ? Object.values(err.constraints)
+                      .map((v) => v)
+                      .join(', ')
+                  : 'Error'
+              }`,
+          )
           .join('\n');
 
         return new BadRequestException(formattedErrors);
