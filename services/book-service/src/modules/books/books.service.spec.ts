@@ -2,6 +2,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getModelToken } from '@nestjs/mongoose';
 import { NotFoundException } from '@nestjs/common';
+import { HttpService } from '@nestjs/axios';
 import { BooksService } from './books.service';
 import { CreateBookDto } from './dto/create-book.dto';
 import { UpdateBookDto } from './dto/update-book.dto';
@@ -64,12 +65,21 @@ describe('BooksService', () => {
     mockBookModel.findByIdAndDelete = jest.fn();
     mockBookModel.create = jest.fn();
 
+    const mockHttpService = {
+      get: jest.fn(),
+      post: jest.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         BooksService,
         {
           provide: getModelToken(Book.name),
           useValue: mockBookModel,
+        },
+        {
+          provide: HttpService,
+          useValue: mockHttpService,
         },
       ],
     }).compile();

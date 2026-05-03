@@ -1,9 +1,11 @@
+/* eslint-disable  */
 import {
   BadRequestException,
   ConflictException,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
+  Logger,
 } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { InjectModel } from '@nestjs/mongoose';
@@ -25,11 +27,13 @@ const DAILY_FINE_RATE = 0.5;
 
 @Injectable()
 export class LendingsService {
+  private readonly logger = new Logger(LendingsService.name);
+
   constructor(
     @InjectModel(Lending.name)
     private lendingModel: Model<LendingDocument>,
     private readonly httpService: HttpService,
-  ) {}
+  ) { }
 
   async create(
     createLendingDto: CreateLendingDto,
@@ -61,6 +65,13 @@ export class LendingsService {
         await this.lendingModel.findByIdAndDelete(saved._id).exec();
         throw error;
       }
+
+      this.notifyUser(
+        createLendingDto.userId,
+        'Book Borrowed Successfully',
+        `You have successfully borrowed a book. Please return it by ${dueDate.toDateString()}.`,
+        authorization,
+      ).catch((e) => this.logger.error('Failed to notify user on create', e.stack));
 
       return saved;
     } catch (error) {
@@ -225,7 +236,10 @@ export class LendingsService {
     }
   }
 
-  async extendLending(id: string): Promise<LendingDocument> {
+  async extendLending(
+    id: string,
+    authorization?: string,
+  ): Promise<LendingDocument> {
     const lending = await this.findById(id);
 
     if (!lending.isActive) {
@@ -249,7 +263,16 @@ export class LendingsService {
     lending.extensionAttempts += 1;
     lending.status = LendingStatus.ACTIVE;
 
-    return lending.save();
+    const saved = await lending.save();
+
+    this.notifyUser(
+      saved.userId,
+      'Lending Period Extended',
+      `Your lending period has been successfully extended. New due date is ${saved.returnDate.toDateString()}.`,
+      authorization,
+    ).catch((e) => this.logger.error('Failed to notify user on extend', e.stack));
+
+    return saved;
   }
 
   async returnLending(
@@ -275,7 +298,16 @@ export class LendingsService {
     lending.status = LendingStatus.RETURNED;
 
     try {
-      return await lending.save();
+      const saved = await lending.save();
+
+      this.notifyUser(
+        saved.userId,
+        'Book Returned Successfully',
+        `Thank you for returning the book. Your total fines (if any) are $${saved.fineAmount}.`,
+        authorization,
+      ).catch((e) => this.logger.error('Failed to notify user on return', e.stack));
+
+      return saved;
     } catch (error) {
       await this.rollbackBookAvailability(
         lending.bookId,
@@ -286,7 +318,7 @@ export class LendingsService {
     }
   }
 
-  async applyDailyOverdueFines(): Promise<{
+  async applyDailyOverdueFines(authorization?: string): Promise<{
     processed: number;
     updated: number;
   }> {
@@ -306,11 +338,27 @@ export class LendingsService {
 
       if (changed) {
         updated += 1;
+
+        // Notify the user about the new fine
+        this.notifyUser(
+          lending.userId,
+          'Library Overdue Fine Applied',
+          `Your borrowed book is overdue. A daily fine has been applied. Your current total fine is $${lending.fineAmount}.`,
+          authorization,
+        ).catch((e) => this.logger.error('Failed to notify fine applied', e.stack));
       }
 
       if (lending.status !== LendingStatus.OVERDUE) {
         lending.status = LendingStatus.OVERDUE;
         await lending.save();
+
+        // Notify the user their book is now officially overdue
+        this.notifyUser(
+          lending.userId,
+          'Library Book Overdue Notice',
+          'Your borrowed book is now overdue. Please return it immediately to avoid further daily fines.',
+          authorization,
+        ).catch((e) => this.logger.error('Failed to notify overdue status', e.stack));
       }
     }
 
@@ -427,6 +475,54 @@ export class LendingsService {
       throw new InternalServerErrorException(
         'Failed to update book availability',
       );
+    }
+  }
+
+  private async notifyUser(
+    userId: string,
+    subject: string,
+    content: string,
+    authorization?: string,
+  ): Promise<void> {
+    const gatewayUrl = process.env['GATEWAY_URL'];
+
+    if (!gatewayUrl) {
+      this.logger.warn('GATEWAY_URL is not configured. Cannot send notification.');
+      return;
+    }
+
+    try {
+      const userResponse = await firstValueFrom(
+        this.httpService.get(
+          `${gatewayUrl}/api/users/${userId}`,
+          {
+            headers: authorization
+              ? { Authorization: authorization }
+              : undefined,
+          },
+        ),
+      );
+
+      const email = userResponse.data?.email;
+
+      if (!email) {
+        this.logger.warn(`User ${userId} does not have an email.`);
+        return;
+      }
+
+      await firstValueFrom(
+        this.httpService.post(
+          `${gatewayUrl}/api/notification/`,
+          { recipient: email, subject, content },
+          {
+            headers: authorization
+              ? { Authorization: authorization }
+              : undefined,
+          },
+        ),
+      );
+    } catch (e) {
+      this.logger.error('Failed to send notification via gateway', e.stack);
     }
   }
 }

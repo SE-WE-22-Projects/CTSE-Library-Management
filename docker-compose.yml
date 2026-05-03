@@ -15,7 +15,7 @@ services:
 
   notification_service:
     build:
-      context: ./services/lending-service
+      context: ./services/notification-service
     ports:
       - "3003:3003"
     env_file: ".env"
