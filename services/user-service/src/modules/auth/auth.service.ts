@@ -162,7 +162,7 @@ export class AuthService implements OnModuleInit {
     try {
       await firstValueFrom(
         this.httpService.post(
-          `${gatewayUrl}/api/notification/`,
+          `${gatewayUrl}/api/notifications/`,
           {
             recipient: email,
             subject: 'Welcome to CTSE Library',

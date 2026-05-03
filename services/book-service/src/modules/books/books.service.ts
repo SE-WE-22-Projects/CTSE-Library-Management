@@ -16,7 +16,7 @@ export class BooksService {
     @InjectModel(Book.name)
     private bookModel: Model<BookDocument>,
     private readonly httpService: HttpService,
-  ) { }
+  ) {}
 
   // CREATE
   async create(
@@ -124,7 +124,7 @@ export class BooksService {
         .map((u) =>
           firstValueFrom(
             this.httpService.post(
-              `${gatewayUrl}/api/notification/`,
+              `${gatewayUrl}/api/notifications/`,
               {
                 recipient: u.email,
                 subject: 'New Book Arrival!',

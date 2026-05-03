@@ -33,7 +33,7 @@ export class LendingsService {
     @InjectModel(Lending.name)
     private lendingModel: Model<LendingDocument>,
     private readonly httpService: HttpService,
-  ) { }
+  ) {}
 
   async create(
     createLendingDto: CreateLendingDto,
@@ -71,7 +71,9 @@ export class LendingsService {
         'Book Borrowed Successfully',
         `You have successfully borrowed a book. Please return it by ${dueDate.toDateString()}.`,
         authorization,
-      ).catch((e) => this.logger.error('Failed to notify user on create', e.stack));
+      ).catch((e) =>
+        this.logger.error('Failed to notify user on create', e.stack),
+      );
 
       return saved;
     } catch (error) {
@@ -270,7 +272,9 @@ export class LendingsService {
       'Lending Period Extended',
       `Your lending period has been successfully extended. New due date is ${saved.returnDate.toDateString()}.`,
       authorization,
-    ).catch((e) => this.logger.error('Failed to notify user on extend', e.stack));
+    ).catch((e) =>
+      this.logger.error('Failed to notify user on extend', e.stack),
+    );
 
     return saved;
   }
@@ -305,7 +309,9 @@ export class LendingsService {
         'Book Returned Successfully',
         `Thank you for returning the book. Your total fines (if any) are $${saved.fineAmount}.`,
         authorization,
-      ).catch((e) => this.logger.error('Failed to notify user on return', e.stack));
+      ).catch((e) =>
+        this.logger.error('Failed to notify user on return', e.stack),
+      );
 
       return saved;
     } catch (error) {
@@ -345,7 +351,9 @@ export class LendingsService {
           'Library Overdue Fine Applied',
           `Your borrowed book is overdue. A daily fine has been applied. Your current total fine is $${lending.fineAmount}.`,
           authorization,
-        ).catch((e) => this.logger.error('Failed to notify fine applied', e.stack));
+        ).catch((e) =>
+          this.logger.error('Failed to notify fine applied', e.stack),
+        );
       }
 
       if (lending.status !== LendingStatus.OVERDUE) {
@@ -358,7 +366,9 @@ export class LendingsService {
           'Library Book Overdue Notice',
           'Your borrowed book is now overdue. Please return it immediately to avoid further daily fines.',
           authorization,
-        ).catch((e) => this.logger.error('Failed to notify overdue status', e.stack));
+        ).catch((e) =>
+          this.logger.error('Failed to notify overdue status', e.stack),
+        );
       }
     }
 
@@ -487,20 +497,17 @@ export class LendingsService {
     const gatewayUrl = process.env['GATEWAY_URL'];
 
     if (!gatewayUrl) {
-      this.logger.warn('GATEWAY_URL is not configured. Cannot send notification.');
+      this.logger.warn(
+        'GATEWAY_URL is not configured. Cannot send notification.',
+      );
       return;
     }
 
     try {
       const userResponse = await firstValueFrom(
-        this.httpService.get(
-          `${gatewayUrl}/api/users/${userId}`,
-          {
-            headers: authorization
-              ? { Authorization: authorization }
-              : undefined,
-          },
-        ),
+        this.httpService.get(`${gatewayUrl}/api/users/${userId}`, {
+          headers: authorization ? { Authorization: authorization } : undefined,
+        }),
       );
 
       const email = userResponse.data?.email;
@@ -512,7 +519,7 @@ export class LendingsService {
 
       await firstValueFrom(
         this.httpService.post(
-          `${gatewayUrl}/api/notification/`,
+          `${gatewayUrl}/api/notifications/`,
           { recipient: email, subject, content },
           {
             headers: authorization
