@@ -8,6 +8,7 @@ export class UserDto {
       _id: v._id.toHexString(),
       email: v.email,
       username: v.username,
+      permissions: v.permissions,
     };
   }
 
@@ -19,4 +20,7 @@ export class UserDto {
 
   @ApiProperty()
   username: string;
+
+  @ApiProperty()
+  permissions: Array<string>;
 }
