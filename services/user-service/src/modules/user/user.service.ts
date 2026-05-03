@@ -19,7 +19,7 @@ export class UserService {
   constructor(
     @InjectModel(User.name)
     private userModel: Model<UserDocument>,
-  ) { }
+  ) {}
 
   async update(id: string, user: UpdateUserDto) {
     let hashed_password: string | undefined = undefined;
@@ -44,8 +44,9 @@ export class UserService {
   }
 
   async deleteById(id: string) {
-    const user = await this.userModel.findById(id).exec();
+    const user = await this.userModel.findByIdAndDelete(id).exec();
     if (!user) throw new NotFoundException('User not found');
+
     return UserDto.from(user);
   }
 
