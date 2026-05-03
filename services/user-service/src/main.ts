@@ -24,11 +24,9 @@ async function bootstrap() {
   app.useGlobalPipes(
     new ValidationPipe({
       exceptionFactory: (errors) => {
-        const formattedErrors = errors.map((err) => ({
-          field: err.property,
-          // @ts-expect-error valid
-          errors: Object.values(err.constraints),
-        }));
+        const formattedErrors = errors
+          .map((err) => `${err.property}: ${JSON.stringify(err.constraints)}`)
+          .join('\n');
 
         return new BadRequestException(formattedErrors);
       },
